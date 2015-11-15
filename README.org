@@ -32,8 +32,9 @@ in the correct places.
 ** Binding keys in the maps
 You may use the built-in =define-key= which will function as intended.
 =bind-key= (part of [[https://github.com/jwiegley/use-package][use-package]]) is another option. For those who want a
-different interface. The following functions are also provided, which both just
-use =define-key= internally, but allow for multiple bindings without much syntax.
+different interface, the following functions are also provided, which both just
+use =define-key= internally, but allow for multiple bindings without much
+syntax.
 
 #+BEGIN_SRC emacs-lisp
 (bind-map-set-keys my-lisp-map

@@ -51,6 +51,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (defgroup bind-map nil
   "Bind personal keymaps in multiple locations."
   :group 'emacs)

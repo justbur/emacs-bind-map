@@ -3,7 +3,7 @@
 bind-map is an Emacs package providing the macro =bind-map= which can be used to
 make a keymap available across different "leader keys" including ones tied to
 evil states. It is essentially a generalization of the idea of a leader key as
-used in vim or the Emacs evil-leader package. This is probably best explained
+used in vim or the Emacs [[https://github.com/cofi/evil-leader][evil-leader]] package. This is probably best explained
 with an example.
 
 #+BEGIN_SRC emacs-lisp

@@ -1,0 +1,29 @@
+
+* bind-map
+bind-map is an Emacs package providing the macro `bind-map' which can be used to
+make a keymap available across different "leader keys" including ones tied to
+evil states. It is essentially a generalization of the idea of a leader key as
+used in vim or the Emacs evil-leader package. This is probably best explained
+with an example.
+
+#+BEGIN_SRC emacs-lisp
+(bind-map my-lisp-map
+  :keys ("M-m")
+  :evil-keys ("SPC")
+  :evil-states (normal visual)
+  :major-modes (emacs-lisp-mode
+                lisp-interaction-mode
+                lisp-mode))
+#+END_SRC
+
+This will take my-lisp-map and make it available under M-m or SPC (in evil's
+normal or visual state. See `bind-map-default-evil-states' for the defaults.)
+when one of the specified major mode is active (there is no need to make sure
+the respective modes' packages are loaded before this declaration). See the
+docstring of `bind-map' for more options.
+
+The idea behind this package is that you want to organize your personal
+bindings in a series of keymaps separate from built-in mode maps. You can
+simply add keys using the built-in `define-key' to my-lisp-map for example,
+and a declaration like the one above will take care of ensuring that these
+bindings are available in the correct places.

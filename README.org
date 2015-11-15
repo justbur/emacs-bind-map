@@ -28,3 +28,28 @@ in a series of keymaps separate from built-in mode maps. You can simply add keys
 using the built-in =define-key= to =my-lisp-map= for example, and a declaration
 like the one above will take care of ensuring that these bindings are available
 in the correct places.
+
+** Binding keys in the maps
+You may use the built-in =define-key= which will function as intended.
+=bind-key= (part of [[https://github.com/jwiegley/use-package][use-package]]) is another option. For those who want a
+different interface. The following functions are also provided, which both just
+use =define-key= internally, but allow for multiple bindings without much syntax.
+
+#+BEGIN_SRC emacs-lisp
+(bind-map-set-keys my-lisp-map
+  "c" 'compile
+  "C" 'check
+  ;; ...
+  )
+(bind-map-set-key-defaults my-lisp-map
+  "c" 'compile
+  "C" 'check
+  ;; ...
+  )
+#+END_SRC
+
+The second function only adds the bindings if there is no existing binding for
+that key. It is probably only useful for shared configurations, where you want
+to provide a default binding but don't want that binding to overwrite one made
+by the user. Note the keys in both functions are strings that are passed to
+=kbd= before binding them.

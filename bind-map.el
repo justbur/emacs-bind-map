@@ -3,7 +3,7 @@
 ;; Copyright (C) 2015 Justin Burkett
 
 ;; Author: Justin Burkett <justin@burkett.cc>
-;; URL:
+;; URL: https://github.com/justbur/emacs-bind-key
 ;; Version: 0.0
 ;; Keywords:
 ;; Package-Requires: ((emacs "24.3"))

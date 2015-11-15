@@ -166,6 +166,17 @@ MAPS, and KEYS."
              (evil-global-set-key state key ,def)))))))
 
 ;;;###autoload
+(defun bind-map-set-keys (map key def &rest bindings)
+  "Add a series of default bindings for LEADER.
+Default bindings never override existing ones. BINDINGS is a
+series of KEY DEF pairs. Each KEY should be a string suitable for
+`kbd'."
+  (while key
+    (define-key map (kbd key) def)
+    (setq key (pop bindings) def (pop bindings))))
+(put 'bind-map-set-keys 'lisp-indent-function 'defun)
+
+;;;###autoload
 (defun bind-map-set-key-defaults (map key def &rest bindings)
   "Add a series of default bindings for LEADER.
 Default bindings never override existing ones. BINDINGS is a
@@ -175,6 +186,7 @@ series of KEY DEF pairs. Each KEY should be a string suitable for
     (unless (lookup-key map (kbd key))
       (define-key map (kbd key) def))
     (setq key (pop bindings) def (pop bindings))))
+(put 'bind-map-set-key-defaults 'lisp-indent-function 'defun)
 
 (provide 'bind-map)
 ;;; olig.el ends here

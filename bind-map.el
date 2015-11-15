@@ -59,6 +59,7 @@
   "Default states for evil bindings."
   :group 'bind-map)
 
+;;;###autoload
 (defmacro bind-map (map &rest args)
   "Bind keymap MAP in multiple places.
 If MAP is not defined, this will create a new sparse keymap with
@@ -164,6 +165,7 @@ MAPS, and KEYS."
                  (evil-define-key state map key ,def))
              (evil-global-set-key state key ,def)))))))
 
+;;;###autoload
 (defun bind-map-set-key-defaults (map key def &rest bindings)
   "Add a series of default bindings for LEADER.
 Default bindings never override existing ones. BINDINGS is a

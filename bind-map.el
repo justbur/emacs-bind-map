@@ -23,11 +23,12 @@
 
 ;;; Commentary:
 
-;; Provides the macro `bind-map' which can be used to make a keymap available
-;; across different "leader keys" including ones tied to evil states. It is
-;; essentially a generalization of the idea of a leader key as used in vim or
-;; the Emacs evil-leader package. This is probably best explained with an
-;; example.
+;; bind-map is an Emacs package providing the macro `bind-map' which can be used
+;; to make a keymap available across different "leader keys" including ones tied
+;; to evil states. It is essentially a generalization of the idea of a leader
+;; key as used in vim or the Emacs https://github.com/cofi/evil-leader package,
+;; and allows for an arbitrary number of "leader keys". This is probably best
+;; explained with an example.
 
 ;; (bind-map my-lisp-map
 ;;   :keys ("M-m")
@@ -37,17 +38,45 @@
 ;;                 lisp-interaction-mode
 ;;                 lisp-mode))
 
-;; This will take my-lisp-map and make it available under M-m or SPC (in evil's
-;; normal or visual state. See `bind-map-default-evil-states' for the defaults.)
-;; when one of the specified major mode is active (there is no need to make sure
-;; the respective modes' packages are loaded before this declaration). See the
-;; docstring of `bind-map' for more options.
+;; This will take my-lisp-map and make it available under the prefixes (or
+;; leaders) M-m and SPC, where the latter is only bound in evil's normal or
+;; visual state (defaults in `bind-map-default-evil-states') when one of the
+;; specified major mode is active (there is no need to make sure the respective
+;; modes' packages are loaded before this declaration). It is also possible to
+;; make the bindings conditional on minor modes being loaded, or a mix of major
+;; and minor modes. If no modes are specified, the relevant global maps are
+;; used. See the docstring of `bind-map' for more options.
 
 ;; The idea behind this package is that you want to organize your personal
 ;; bindings in a series of keymaps separate from built-in mode maps. You can
 ;; simply add keys using the built-in `define-key' to my-lisp-map for example,
 ;; and a declaration like the one above will take care of ensuring that these
 ;; bindings are available in the correct places.
+
+;; Binding keys in the maps
+
+;; You may use the built-in `define-key' which will function as intended.
+;; `bind-key' (part of https://github.com/jwiegley/use-package) is another
+;; option. For those who want a different interface, the following functions are
+;; also provided, which both just use `define-key' internally, but allow for
+;; multiple bindings without much syntax.
+
+;; (bind-map-set-keys my-lisp-map
+;;   "c" 'compile
+;;   "C" 'check
+;;   ;; ...
+;;   )
+;; (bind-map-set-key-defaults my-lisp-map
+;;   "c" 'compile
+;;   "C" 'check
+;;   ;; ...
+;;   )
+
+;; The second function only adds the bindings if there is no existing binding
+;; for that key. It is probably only useful for shared configurations, where you
+;; want to provide a default binding but don't want that binding to overwrite
+;; one made by the user. Note the keys in both functions are strings that are
+;; passed to `kbd' before binding them.
 
 ;;; Code:
 

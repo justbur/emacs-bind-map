@@ -214,4 +214,4 @@ series of KEY DEF pairs. Each KEY should be a string suitable for
 (put 'bind-map-set-key-defaults 'lisp-indent-function 'defun)
 
 (provide 'bind-map)
-;;; olig.el ends here
+;;; bind-key.el ends here

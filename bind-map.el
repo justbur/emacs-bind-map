@@ -158,7 +158,7 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (defvar-local ,activate nil)
          (cl-pushnew (cons ',activate ,root-map-sym)
                      minor-mode-map-alist)
-         (nconc ,major-mode-list ',major-modes)
+         (setq ,major-mode-list (append ,major-mode-list ',major-modes))
          (defun ,activate-func ()
            (setq ,activate (not (null (member major-mode ,major-mode-list)))))
          (add-hook 'after-change-major-mode-hook ',activate-func))

@@ -1,4 +1,4 @@
-;;; bind-map.el ---  -*- lexical-binding: t; -*-
+;;; bind-map.el --- Bind personal keymaps in multiple locations -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015 Justin Burkett
 
@@ -52,7 +52,7 @@
 ;;; Code:
 
 (defgroup bind-map nil
-  "A simple way to manage personal keybindings"
+  "Bind personal keymaps in multiple locations."
   :group 'emacs)
 
 (defcustom bind-map-default-evil-states '(normal motion visual)
@@ -61,7 +61,7 @@
 
 ;;;###autoload
 (defmacro bind-map (map &rest args)
-  "Bind keymap MAP in multiple places.
+  "Bind keymap MAP in multiple locations.
 If MAP is not defined, this will create a new sparse keymap with
 the name MAP. Supports binding in evil states and conditioning
 the bindings on major and/or minor modes being active. The
@@ -97,7 +97,7 @@ unspecified the bindings are global.
 
 :prefix-cmd COMMAND-NAME
 
-Declare a prefix command for  named COMMAND-NAME."
+Declare a prefix command for MAP named COMMAND-NAME."
   (let* ((root-map-sym (intern (format "%s-root-map" map)))
          (major-mode-list (intern (format "%s-major-modes" map)))
          (activate (intern (format "%s-activate" map)))
@@ -133,7 +133,7 @@ Declare a prefix command for  named COMMAND-NAME."
          (defvar-local ,activate nil)
          (cl-pushnew (cons ',activate ,root-map-sym)
                      minor-mode-map-alist)
-         (setq ,major-mode-list (append ',major-modes ,major-mode-list))
+         (nconc ,major-mode-list ',major-modes)
          (defun ,activate-func ()
            (setq ,activate (not (null (member major-mode ,major-mode-list)))))
          (add-hook 'after-change-major-mode-hook ',activate-func))

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2015 Justin Burkett
 
 ;; Author: Justin Burkett <justin@burkett.cc>
-;; URL: https://github.com/justbur/emacs-bind-key
+;; URL: https://github.com/justbur/emacs-bind-map
 ;; Version: 0.0
 ;; Keywords:
 ;; Package-Requires: ((emacs "24.3"))
@@ -56,7 +56,7 @@
 ;; Binding keys in the maps
 
 ;; You may use the built-in `define-key' which will function as intended.
-;; `bind-key' (part of https://github.com/jwiegley/use-package) is another
+;; `bind-map' (part of https://github.com/jwiegley/use-package) is another
 ;; option. For those who want a different interface, the following functions are
 ;; also provided, which both just use `define-key' internally, but allow for
 ;; multiple bindings without much syntax.
@@ -211,4 +211,4 @@ series of KEY DEF pairs. Each KEY should be a string suitable for
 (put 'bind-map-set-key-defaults 'lisp-indent-function 'defun)
 
 (provide 'bind-map)
-;;; bind-key.el ends here
+;;; bind-map.el ends here

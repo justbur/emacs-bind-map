@@ -20,8 +20,10 @@ This will take =my-lisp-map= and make it available under the prefixes (or
 leaders) =M-m= and =SPC=, where the latter is only bound in evil's normal or
 visual state (defaults in =bind-map-default-evil-states=) when one of the
 specified major mode is active (there is no need to make sure the respective
-modes' packages are loaded before this declaration). See the docstring of
-=bind-map= for more options.
+modes' packages are loaded before this declaration). It is also possible to make
+the bindings conditional on minor modes being loaded, or a mix of major and
+minor modes. If no modes are specified, the relevant global maps are used. See
+the docstring of =bind-map= for more options.
 
 The idea behind this package is that you want to organize your personal bindings
 in a series of keymaps separate from built-in mode maps. You can simply add keys

@@ -80,8 +80,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
-
 (defgroup bind-map nil
   "Bind personal keymaps in multiple locations."
   :group 'emacs)
@@ -150,14 +148,13 @@ Declare a prefix command for MAP named COMMAND-NAME."
        (when ',minor-modes
          (defvar ,root-map-sym (make-sparse-keymap))
          (dolist (mode ',minor-modes)
-           (cl-pushnew (cons mode ,root-map-sym) minor-mode-map-alist)))
+           (push (cons mode ,root-map-sym) minor-mode-map-alist)))
 
        (when ',major-modes
          (defvar ,root-map-sym (make-sparse-keymap))
          (defvar ,major-mode-list '())
          (defvar-local ,activate nil)
-         (cl-pushnew (cons ',activate ,root-map-sym)
-                     minor-mode-map-alist)
+         (push (cons ',activate ,root-map-sym) minor-mode-map-alist)
          (setq ,major-mode-list (append ,major-mode-list ',major-modes))
          (defun ,activate-func ()
            (setq ,activate (not (null (member major-mode ,major-mode-list)))))

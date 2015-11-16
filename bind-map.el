@@ -88,6 +88,11 @@
   "Default states for evil bindings."
   :group 'bind-map)
 
+(defcustom bind-map-default-map-suffix "-bm-map"
+  "Default suffix to use for `bind-map-for-major-mode' and
+`bind-map-for-minor-mode'."
+  :group 'bind-map)
+
 ;;;###autoload
 (defmacro bind-map (map &rest args)
   "Bind keymap MAP in multiple locations.
@@ -188,7 +193,8 @@ a major mode. This macro makes the call
 where ARGS should include :keys or :evil-keys. The name of the
 generated keymap is returned, which is always the name of the
 major mode with -bm-map appended."
-  (let ((map-name (intern (format "%s-bm-map" major-mode))))
+  (let ((map-name (intern (concat (symbol-name major-mode)
+                                  bind-map-default-map-suffix))))
     `(progn
        (bind-map ,map-name
          :major-modes (,major-mode)
@@ -209,7 +215,8 @@ a minor mode. This macro makes the call
 where ARGS should include :keys or :evil-keys. The name of the
 generated keymap is returned, which is always the name of the
 minor mode with -bm-map appended."
-  (let ((map-name (intern (format "%s-bm-map" minor-mode))))
+  (let ((map-name (intern (concat (symbol-name minor-mode)
+                                  bind-map-default-map-suffix))))
     `(progn
        (bind-map ,map-name
          :minor-modes (,minor-mode)

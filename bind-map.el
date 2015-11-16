@@ -186,9 +186,9 @@ Declare a prefix command for MAP named COMMAND-NAME."
 single major mode. MAJOR-MODE is the unquoted symbol representing
 a major mode. This macro makes the call
 
-(bind-map MAJOR-MODE-bm-map
-  :major-modes (MAJOR-MODE)
-  ARGS)
+\(bind-map MAJOR-MODE-bm-map
+  :major-modes \(MAJOR-MODE\)
+  ARGS\)
 
 where ARGS should include :keys or :evil-keys. The name of the
 generated keymap is returned, which is always the name of the
@@ -208,9 +208,9 @@ major mode with -bm-map appended."
 single minor mode. MINOR-MODE is the unquoted symbol representing
 a minor mode. This macro makes the call
 
-(bind-map MINOR-MODE-bm-map
-  :minor-modes (MINOR-MODE)
-  ARGS)
+\(bind-map MINOR-MODE-bm-map
+  :minor-modes \(MINOR-MODE\)
+  ARGS\)
 
 where ARGS should include :keys or :evil-keys. The name of the
 generated keymap is returned, which is always the name of the

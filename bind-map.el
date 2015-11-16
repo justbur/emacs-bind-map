@@ -56,7 +56,7 @@
 ;; Binding keys in the maps
 
 ;; You may use the built-in `define-key' which will function as intended.
-;; `bind-map' (part of https://github.com/jwiegley/use-package) is another
+;; `bind-key' (part of https://github.com/jwiegley/use-package) is another
 ;; option. For those who want a different interface, the following functions are
 ;; also provided, which both just use `define-key' internally, but allow for
 ;; multiple bindings without much syntax.

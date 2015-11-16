@@ -7,27 +7,32 @@ used in vim or the Emacs [[https://github.com/cofi/evil-leader][evil-leader]] pa
 of "leader keys". This is probably best explained with an example.
 
 #+BEGIN_SRC emacs-lisp
-(bind-map my-lisp-map
+(bind-map my-base-leader-map
   :keys ("M-m")
   :evil-keys ("SPC")
-  :evil-states (normal visual)
+  :evil-states (normal motion visual))
+(bind-map my-elisp-map
+  :keys ("M-m m" "M-RET")
+  :evil-keys ("SPC m" ",")
   :major-modes (emacs-lisp-mode
-                lisp-interaction-mode
-                lisp-mode))
+                lisp-interaction-mode))
 #+END_SRC
 
-This will take =my-lisp-map= and make it available under the prefixes (or
-leaders) =M-m= and =SPC=, where the latter is only bound in evil's normal or
-visual state (defaults in =bind-map-default-evil-states=) when one of the
-specified major mode is active (there is no need to make sure the respective
-modes' packages are loaded before this declaration). It is also possible to make
-the bindings conditional on minor modes being loaded, or a mix of major and
-minor modes. If no modes are specified, the relevant global maps are used. See
-the docstring of =bind-map= for more options.
+This will make =my-base-leader-map= (automatically creating the map if it's not
+defined yet) available under the prefixes (or leaders) =M-m= and =SPC=, where
+the latter is only bound in evil's normal, motion or visual states. The second
+declaration makes =my-elisp-map= available under the specified keys when one of
+the specified major modes is active. In the second case, the evil states used
+are also normal motion and visual because this is the default as specified in
+=bind-map-default-evil-states=. It is possible to make the bindings conditional
+on minor modes being loaded, or a mix of major and minor modes. Since the
+symbols of the modes are used, it is not necessary to ensure that any of the
+mode's packages are loaded prior to this declaration. See the docstring of
+=bind-map= for more options.
 
 The idea behind this package is that you want to organize your personal bindings
 in a series of keymaps separate from built-in mode maps. You can simply add keys
-using the built-in =define-key= to =my-lisp-map= for example, and a declaration
+using the built-in =define-key= to =my-elisp-map= for example, and a declaration
 like the one above will take care of ensuring that these bindings are available
 in the correct places.
 
@@ -39,16 +44,24 @@ use =define-key= internally, but allow for multiple bindings without much
 syntax.
 
 #+BEGIN_SRC emacs-lisp
-(bind-map-set-keys my-lisp-map
-  "c" 'compile
-  "C" 'check
+  (bind-map-set-keys my-base-leader-map
+    "c" 'compile
+    "C" 'check
+    ;; ...
+    )
+  ;; is the same as
+  ;; (define-key my-base-leader-map (kbd "c") 'compile)
+  ;; (define-key my-base-leader-map (kbd "C") 'check)
   ;; ...
-  )
-(bind-map-set-key-defaults my-lisp-map
-  "c" 'compile
-  "C" 'check
+
+  (bind-map-set-key-defaults my-base-leader-map
+    "c" 'compile
+    ;; ...
+    )
+  ;; is the same as
+  ;; (unless (lookup-key my-base-leader-map (kbd "c"))
+  ;;   (define-key my-base-leader-map (kbd "c") 'compile))
   ;; ...
-  )
 #+END_SRC
 
 The second function only adds the bindings if there is no existing binding for

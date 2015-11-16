@@ -175,6 +175,48 @@ Declare a prefix command for MAP named COMMAND-NAME."
             ',evil-states nil ',evil-keys (quote prefix)))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
+;;;###autoload
+(defmacro bind-map-for-major-mode (major-mode &rest args)
+  "Short version of `bind-map' if you want to bind a map for a
+single major mode. MAJOR-MODE is the unquoted symbol representing
+a major mode. This macro makes the call
+
+(bind-map MAJOR-MODE-bm-map
+  :major-modes (MAJOR-MODE)
+  ARGS)
+
+where ARGS should include :keys or :evil-keys. The name of the
+generated keymap is returned, which is always the name of the
+major mode with -bm-map appended."
+  (let ((map-name (intern (format "%s-bm-map" major-mode))))
+    `(progn
+       (bind-map ,map-name
+         :major-modes (,major-mode)
+         ,@args)
+       ',map-name)))
+(put 'bind-map-for-major-mode 'lisp-indent-function 'defun)
+
+;;;###autoload
+(defmacro bind-map-for-minor-mode (minor-mode &rest args)
+  "Short version of `bind-map' if you want to bind a map for a
+single minor mode. MINOR-MODE is the unquoted symbol representing
+a minor mode. This macro makes the call
+
+(bind-map MINOR-MODE-bm-map
+  :minor-modes (MINOR-MODE)
+  ARGS)
+
+where ARGS should include :keys or :evil-keys. The name of the
+generated keymap is returned, which is always the name of the
+minor mode with -bm-map appended."
+  (let ((map-name (intern (format "%s-bm-map" minor-mode))))
+    `(progn
+       (bind-map ,map-name
+         :minor-modes (,minor-mode)
+         ,@args)
+       ',map-name)))
+(put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
+
 (defun bind-map-evil-define-key (states maps keys def)
   "Version of `evil-define-key' that binds DEF across multiple STATES,
 MAPS, and KEYS."

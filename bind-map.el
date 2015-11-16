@@ -189,7 +189,7 @@ MAPS, and KEYS."
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)
-  "Add a series of default bindings for LEADER.
+  "Add a series of default bindings to MAP.
 Default bindings never override existing ones. BINDINGS is a
 series of KEY DEF pairs. Each KEY should be a string suitable for
 `kbd'."
@@ -200,7 +200,7 @@ series of KEY DEF pairs. Each KEY should be a string suitable for
 
 ;;;###autoload
 (defun bind-map-set-key-defaults (map key def &rest bindings)
-  "Add a series of default bindings for LEADER.
+  "Add a series of default bindings to MAP.
 Default bindings never override existing ones. BINDINGS is a
 series of KEY DEF pairs. Each KEY should be a string suitable for
 `kbd'."

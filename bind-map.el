@@ -136,7 +136,8 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (major-mode-list (intern (format "%s-major-modes" map)))
          (activate (intern (format "%s-activate" map)))
          (activate-func (intern (format "%s-activate-function" map)))
-         (prefix-cmd (plist-get args :prefix-cmd))
+         (prefix-cmd (or (plist-get args :prefix-cmd)
+                         (intern (format "%s-cmds" map))))
          (keys (mapcar 'bind-map-kbd (plist-get args :keys)))
          (evil-keys (mapcar 'bind-map-kbd (plist-get args :evil-keys)))
          (evil-states (or (plist-get args :evil-states)
@@ -146,9 +147,8 @@ Declare a prefix command for MAP named COMMAND-NAME."
     `(progn
        (defvar ,map (make-sparse-keymap))
 
-       (when ',prefix-cmd
-         (setq ,prefix-cmd ,map)
-         (setf (symbol-function ',prefix-cmd) ,map))
+       (setq ,prefix-cmd ,map)
+       (setf (symbol-function ',prefix-cmd) ,map)
 
        (when ',minor-modes
          (defvar ,root-map-sym (make-sparse-keymap))
@@ -163,21 +163,20 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (setq ,major-mode-list (append ,major-mode-list ',major-modes))
          (defun ,activate-func ()
            (setq ,activate (not (null (member major-mode ,major-mode-list)))))
-         (add-hook 'after-change-major-mode-hook ',activate-func))
+         (add-hook 'change-major-mode-after-body-hook ',activate-func))
 
-       (let ((prefix (or ',prefix-cmd ,map)))
-         (if (or ',minor-modes ',major-modes)
-             ;;bind keys in root-map
-             (progn
-               (dolist (key ',keys)
-                 (define-key ,root-map-sym key prefix))
-               (bind-map-evil-define-key
-                ',evil-states '(,root-map-sym) ',evil-keys (quote prefix)))
-           ;;bind in global maps
-           (dolist (key ',keys)
-             (global-set-key key prefix))
-           (bind-map-evil-define-key
-            ',evil-states nil ',evil-keys (quote prefix)))))))
+       (if (or ',minor-modes ',major-modes)
+           ;;bind keys in root-map
+           (progn
+             (dolist (key ',keys)
+               (define-key ,root-map-sym key ',prefix-cmd))
+             (bind-map-evil-define-key
+              ',evil-states ,root-map-sym ',evil-keys ',prefix-cmd))
+         ;;bind in global maps
+         (dolist (key ',keys)
+           (global-set-key key ',prefix-cmd))
+         (bind-map-evil-define-key
+           ',evil-states nil ',evil-keys ',prefix-cmd)))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload
@@ -224,20 +223,21 @@ minor mode with -bm-map appended."
        ',map-name)))
 (put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
 
-(defun bind-map-evil-define-key (states maps keys def)
-  "Version of `evil-define-key' that binds DEF across multiple STATES,
-MAPS, and KEYS."
-  (eval-after-load 'evil
-    `(progn
-       (dolist (state ',states)
-         (dolist (key ',keys)
-           (if ',maps
-               (dolist (map (list ,@maps))
-                 (evil-define-key state map key ,def))
-             (evil-global-set-key state key ,def)))))))
 (defun bind-map-kbd (key)
   (if (stringp key) (kbd key) (kbd (eval key))))
 
+(defun bind-map-evil-define-key (states map keys def)
+  "Version of `evil-define-key' that binds DEF across multiple
+STATES and KEYS."
+  (when keys
+    (require 'evil)
+    (dolist (state states)
+      (dolist (key keys)
+        (if map
+            (eval
+             `(evil-define-key ',state ',map ,key ',def))
+          (eval
+           `(evil-global-set-key ',state ,key ',def)))))))
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)

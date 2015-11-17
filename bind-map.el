@@ -137,8 +137,8 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (activate (intern (format "%s-activate" map)))
          (activate-func (intern (format "%s-activate-function" map)))
          (prefix-cmd (plist-get args :prefix-cmd))
-         (keys (mapcar 'kbd (plist-get args :keys)))
-         (evil-keys (mapcar 'kbd (plist-get args :evil-keys)))
+         (keys (mapcar 'bind-map-kbd (plist-get args :keys)))
+         (evil-keys (mapcar 'bind-map-kbd (plist-get args :evil-keys)))
          (evil-states (or (plist-get args :evil-states)
                           bind-map-default-evil-states))
          (minor-modes (plist-get args :minor-modes))
@@ -235,6 +235,9 @@ MAPS, and KEYS."
                (dolist (map (list ,@maps))
                  (evil-define-key state map key ,def))
              (evil-global-set-key state key ,def)))))))
+(defun bind-map-kbd (key)
+  (if (stringp key) (kbd key) (kbd (eval key))))
+
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)
@@ -243,7 +246,7 @@ Default bindings never override existing ones. BINDINGS is a
 series of KEY DEF pairs. Each KEY should be a string suitable for
 `kbd'."
   (while key
-    (define-key map (kbd key) def)
+    (define-key map (bind-map-kbd key) def)
     (setq key (pop bindings) def (pop bindings))))
 (put 'bind-map-set-keys 'lisp-indent-function 'defun)
 
@@ -254,8 +257,8 @@ Default bindings never override existing ones. BINDINGS is a
 series of KEY DEF pairs. Each KEY should be a string suitable for
 `kbd'."
   (while key
-    (unless (lookup-key map (kbd key))
-      (define-key map (kbd key) def))
+    (unless (lookup-key map (bind-map-kbd key))
+      (define-key map (bind-map-kbd key) def))
     (setq key (pop bindings) def (pop bindings))))
 (put 'bind-map-set-key-defaults 'lisp-indent-function 'defun)
 

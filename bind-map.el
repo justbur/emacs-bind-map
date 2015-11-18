@@ -137,7 +137,7 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (activate (intern (format "%s-activate" map)))
          (activate-func (intern (format "%s-activate-function" map)))
          (prefix-cmd (or (plist-get args :prefix-cmd)
-                         (intern (format "%s-cmds" map))))
+                         (intern (format "%s-prefix" map))))
          (keys (mapcar 'bind-map-kbd (plist-get args :keys)))
          (evil-keys (mapcar 'bind-map-kbd (plist-get args :evil-keys)))
          (evil-states (or (plist-get args :evil-states)
@@ -146,7 +146,6 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (major-modes (plist-get args :major-modes)))
     `(progn
        (defvar ,map (make-sparse-keymap))
-
        (setq ,prefix-cmd ,map)
        (setf (symbol-function ',prefix-cmd) ,map)
 
@@ -170,13 +169,15 @@ Declare a prefix command for MAP named COMMAND-NAME."
            (progn
              (dolist (key ',keys)
                (define-key ,root-map-sym key ',prefix-cmd))
-             (bind-map-evil-define-key
-              ',evil-states ,root-map-sym ',evil-keys ',prefix-cmd))
+             (when ',evil-keys
+               (bind-map-evil-define-key
+                ',evil-states ,root-map-sym ',evil-keys ',prefix-cmd)))
          ;;bind in global maps
          (dolist (key ',keys)
            (global-set-key key ',prefix-cmd))
-         (bind-map-evil-define-key
-           ',evil-states nil ',evil-keys ',prefix-cmd)))))
+         (when ',evil-keys
+           (bind-map-evil-define-key
+            ',evil-states nil ',evil-keys ',prefix-cmd))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload
@@ -229,15 +230,14 @@ minor mode with -bm-map appended."
 (defun bind-map-evil-define-key (states map keys def)
   "Version of `evil-define-key' that binds DEF across multiple
 STATES and KEYS."
-  (when keys
-    (require 'evil)
-    (dolist (state states)
-      (dolist (key keys)
-        (if map
-            (eval
-             `(evil-define-key ',state ',map ,key ',def))
+  (require 'evil)
+  (dolist (state states)
+    (dolist (key keys)
+      (if map
           (eval
-           `(evil-global-set-key ',state ,key ',def)))))))
+           `(evil-define-key ',state ',map ,key ',def))
+        (eval
+         `(evil-global-set-key ',state ,key ',def))))))
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)

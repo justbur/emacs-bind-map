@@ -147,7 +147,7 @@ Declare a prefix command for MAP named COMMAND-NAME."
     `(progn
        (defvar ,map (make-sparse-keymap))
        (unless (keymapp ,map)
-         (error "bind-map: %s is not a keymap" ,map))
+         (error "bind-map: %s is not a keymap" ',map))
        (setq ,prefix-cmd ,map)
        (setf (symbol-function ',prefix-cmd) ,map)
 

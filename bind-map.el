@@ -186,13 +186,13 @@ Declare a prefix command for MAP named COMMAND-NAME."
 single major mode. MAJOR-MODE-SYM is the unquoted symbol
 representing a major mode. This macro makes the call
 
-\(bind-map MAJOR-MODE-SYM-bm-map
+\(bind-map map-name
   :major-modes \(MAJOR-MODE-SYM\)
   ARGS\)
 
 where ARGS should include :keys or :evil-keys. The name of the
-generated keymap is returned, which is always the name of the
-major mode with -bm-map appended."
+generated keymap is returned, which is MAJOR-MODE-SYM concatenated
+with `bind-map-default-map-suffix'."
   (let ((map-name (intern (concat (symbol-name major-mode-sym)
                                   bind-map-default-map-suffix))))
     `(progn
@@ -208,13 +208,13 @@ major mode with -bm-map appended."
 single minor mode. MINOR-MODE-SYM is the unquoted symbol
 representing a minor mode. This macro makes the call
 
-\(bind-map MINOR-MODE-SYM-bm-map
+\(bind-map map-name
   :minor-modes \(MINOR-MODE-SYM\)
   ARGS\)
 
 where ARGS should include :keys or :evil-keys. The name of the
-generated keymap is returned, which is always the name of the
-minor mode with -bm-map appended."
+generated keymap is returned, which is MINOR-MODE-SYM
+concatenated with `bind-map-default-map-suffix'."
   (let ((map-name (intern (concat (symbol-name minor-mode-sym)
                                   bind-map-default-map-suffix))))
     `(progn
@@ -241,10 +241,9 @@ STATES and KEYS."
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)
-  "Add a series of default bindings to MAP.
-Default bindings never override existing ones. BINDINGS is a
-series of KEY DEF pairs. Each KEY should be a string suitable for
-`kbd'."
+  "Add a series of bindings to MAP.
+BINDINGS is a series of KEY DEF pairs. Each KEY should be a
+string suitable for `kbd'."
   (while key
     (define-key map (bind-map-kbd key) def)
     (setq key (pop bindings) def (pop bindings))))

@@ -132,7 +132,7 @@ unspecified the bindings are global.
 :prefix-cmd COMMAND-NAME
 
 Declare a prefix command for MAP named COMMAND-NAME."
-  (let* ((root-map-sym (intern (format "%s-root-map" map)))
+  (let* ((root-map (intern (format "%s-root-map" map)))
          (major-mode-list (intern (format "%s-major-modes" map)))
          (activate (intern (format "%s-activate" map)))
          (activate-func (intern (format "%s-activate-function" map)))
@@ -146,19 +146,21 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (major-modes (plist-get args :major-modes)))
     `(progn
        (defvar ,map (make-sparse-keymap))
+       (unless (keymapp ,map)
+         (error "bind-map: %s is not a keymap" ,map))
        (setq ,prefix-cmd ,map)
        (setf (symbol-function ',prefix-cmd) ,map)
 
        (when ',minor-modes
-         (defvar ,root-map-sym (make-sparse-keymap))
+         (defvar ,root-map (make-sparse-keymap))
          (dolist (mode ',minor-modes)
-           (push (cons mode ,root-map-sym) minor-mode-map-alist)))
+           (push (cons mode ,root-map) minor-mode-map-alist)))
 
        (when ',major-modes
-         (defvar ,root-map-sym (make-sparse-keymap))
+         (defvar ,root-map (make-sparse-keymap))
          (defvar ,major-mode-list '())
          (defvar-local ,activate nil)
-         (push (cons ',activate ,root-map-sym) minor-mode-map-alist)
+         (push (cons ',activate ,root-map) minor-mode-map-alist)
          (setq ,major-mode-list (append ,major-mode-list ',major-modes))
          (defun ,activate-func ()
            (setq ,activate (not (null (member major-mode ,major-mode-list)))))
@@ -168,10 +170,10 @@ Declare a prefix command for MAP named COMMAND-NAME."
            ;;bind keys in root-map
            (progn
              (dolist (key ',keys)
-               (define-key ,root-map-sym key ',prefix-cmd))
+               (define-key ,root-map key ',prefix-cmd))
              (when ',evil-keys
                (bind-map-evil-define-key
-                ',evil-states ,root-map-sym ',evil-keys ',prefix-cmd)))
+                ',evil-states ,root-map ',evil-keys ',prefix-cmd)))
          ;;bind in global maps
          (dolist (key ',keys)
            (global-set-key key ',prefix-cmd))

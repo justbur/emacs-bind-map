@@ -225,7 +225,11 @@ concatenated with `bind-map-default-map-suffix'."
 (put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
 
 (defun bind-map-kbd (key)
-  (if (stringp key) (kbd key) (kbd (eval key))))
+  "If KEY is a string use `kbd'. If it's a symbol, use
+`symbol-value' then `kbd'."
+  (cond ((stringp key) (kbd key))
+        ((symbolp key) (kbd (symbol-value key)))
+        (t (error "bind-map-kbd: KEY should be a string or a symbol. KEY is %s" key))))
 
 (defun bind-map-evil-define-key (states map keys def)
   "Version of `evil-define-key' that binds DEF across multiple

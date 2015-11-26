@@ -159,7 +159,9 @@ Declare a prefix command for MAP named COMMAND-NAME."
        (when ',major-modes
          (defvar ,root-map (make-sparse-keymap))
          (defvar ,major-mode-list '())
-         (defvar-local ,activate nil)
+         ;; compiler warns about making a local var below the top-level
+         (with-no-warnings
+           (defvar-local ,activate nil))
          (push (cons ',activate ,root-map) minor-mode-map-alist)
          (setq ,major-mode-list (append ,major-mode-list ',major-modes))
          (defun ,activate-func ()

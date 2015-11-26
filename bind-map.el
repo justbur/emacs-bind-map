@@ -138,8 +138,8 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (activate-func (intern (format "%s-activate-function" map)))
          (prefix-cmd (or (plist-get args :prefix-cmd)
                          (intern (format "%s-prefix" map))))
-         (keys (mapcar 'bind-map-kbd (plist-get args :keys)))
-         (evil-keys (mapcar 'bind-map-kbd (plist-get args :evil-keys)))
+         (keys (plist-get args :keys))
+         (evil-keys (plist-get args :evil-keys))
          (evil-states (or (plist-get args :evil-states)
                           bind-map-default-evil-states))
          (minor-modes (plist-get args :minor-modes))
@@ -169,17 +169,17 @@ Declare a prefix command for MAP named COMMAND-NAME."
        (if (or ',minor-modes ',major-modes)
            ;;bind keys in root-map
            (progn
-             (dolist (key ',keys)
-               (define-key ,root-map key ',prefix-cmd))
+             (dolist (key (list ,@keys))
+               (define-key ,root-map (kbd key) ',prefix-cmd))
              (when ',evil-keys
                (bind-map-evil-define-key
-                ',evil-states ,root-map ',evil-keys ',prefix-cmd)))
+                ',evil-states ,root-map (list ,@evil-keys) ',prefix-cmd)))
          ;;bind in global maps
-         (dolist (key ',keys)
-           (global-set-key key ',prefix-cmd))
+         (dolist (key (list ,@keys))
+           (global-set-key (kbd key) ',prefix-cmd))
          (when ',evil-keys
            (bind-map-evil-define-key
-            ',evil-states nil ',evil-keys ',prefix-cmd))))))
+            ',evil-states nil (list ,@evil-keys) ',prefix-cmd))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload
@@ -226,13 +226,6 @@ concatenated with `bind-map-default-map-suffix'."
        ',map-name)))
 (put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
 
-(defun bind-map-kbd (key)
-  "If KEY is a string use `kbd'. If it's a symbol, use
-`symbol-value' then `kbd'."
-  (cond ((stringp key) (kbd key))
-        ((symbolp key) (kbd (symbol-value key)))
-        (t (error "bind-map-kbd: KEY should be a string or a symbol. KEY is %s" key))))
-
 (defun bind-map-evil-define-key (states map keys def)
   "Version of `evil-define-key' that binds DEF across multiple
 STATES and KEYS."
@@ -241,9 +234,9 @@ STATES and KEYS."
     (dolist (key keys)
       (if map
           (eval
-           `(evil-define-key ',state ',map ,key ',def))
+           `(evil-define-key ',state ',map (kbd ,key) ',def))
         (eval
-         `(evil-global-set-key ',state ,key ',def))))))
+         `(evil-global-set-key ',state (kbd ,key) ',def))))))
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)
@@ -251,7 +244,7 @@ STATES and KEYS."
 BINDINGS is a series of KEY DEF pairs. Each KEY should be a
 string suitable for `kbd'."
   (while key
-    (define-key map (bind-map-kbd key) def)
+    (define-key map (kbd key) def)
     (setq key (pop bindings) def (pop bindings))))
 (put 'bind-map-set-keys 'lisp-indent-function 'defun)
 
@@ -262,8 +255,8 @@ Default bindings never override existing ones. BINDINGS is a
 series of KEY DEF pairs. Each KEY should be a string suitable for
 `kbd'."
   (while key
-    (unless (lookup-key map (bind-map-kbd key))
-      (define-key map (bind-map-kbd key) def))
+    (unless (lookup-key map (kbd key))
+      (define-key map (kbd key) def))
     (setq key (pop bindings) def (pop bindings))))
 (put 'bind-map-set-key-defaults 'lisp-indent-function 'defun)
 

@@ -148,6 +148,7 @@ Declare a prefix command for MAP named COMMAND-NAME."
        (defvar ,map (make-sparse-keymap))
        (unless (keymapp ,map)
          (error "bind-map: %s is not a keymap" ',map))
+       (defvar ,prefix-cmd nil)
        (setq ,prefix-cmd ,map)
        (setf (symbol-function ',prefix-cmd) ,map)
 
@@ -163,7 +164,8 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (with-no-warnings
            (defvar-local ,activate nil))
          (push (cons ',activate ,root-map) minor-mode-map-alist)
-         (setq ,major-mode-list (append ,major-mode-list ',major-modes))
+         (dolist (mode ',major-modes)
+           (add-to-list ',major-mode-list mode))
          (defun ,activate-func ()
            (setq ,activate (not (null (member major-mode ,major-mode-list)))))
          (add-hook 'change-major-mode-after-body-hook ',activate-func))

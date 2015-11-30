@@ -107,6 +107,13 @@ which are optional.
 The keys to use for the leader binding. These are strings
 suitable for use in `kbd'.
 
+:override-minor-modes BOOL
+
+If non nil, make keys in :keys override the minor-mode maps, by
+using `emulation-mode-map-alists' instead of `global-map'. If
+either :major-modes or :minor-modes is specified, this setting
+has no effect.
+
 :evil-keys (KEY1 KEY2 ...)
 
 Like :keys but these bindings are only active in certain evil
@@ -121,7 +128,8 @@ use `bind-map-default-evil-states'.
 
 This places all evil bindings in the local state maps for evil.
 These maps have high precedence and will mask most other evil
-bindings.
+bindings. If either :major-modes or :minor-modes is specified,
+this setting has no effect.
 
 :major-modes (MODE1 MODE2 ...)
 
@@ -145,10 +153,10 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (prefix-cmd (or (plist-get args :prefix-cmd)
                          (intern (format "%s-prefix" map))))
          (keys (plist-get args :keys))
+         (override-minor-modes (plist-get args :override-minor-modes))
          (evil-keys (plist-get args :evil-keys))
          (evil-states (or (plist-get args :evil-states)
                           bind-map-default-evil-states))
-         ;; (evil-override-known-maps (plist-get args :evil-override-known-maps))
          (evil-use-local (plist-get args :evil-use-local))
          (minor-modes (plist-get args :minor-modes))
          (major-modes (plist-get args :major-modes)))
@@ -159,14 +167,13 @@ Declare a prefix command for MAP named COMMAND-NAME."
        (defvar ,prefix-cmd nil)
        (setq ,prefix-cmd ,map)
        (setf (symbol-function ',prefix-cmd) ,map)
+       (defvar ,root-map (make-sparse-keymap))
 
        (when ',minor-modes
-         (defvar ,root-map (make-sparse-keymap))
          (dolist (mode ',minor-modes)
            (push (cons mode ,root-map) minor-mode-map-alist)))
 
        (when ',major-modes
-         (defvar ,root-map (make-sparse-keymap))
          (defvar ,major-mode-list '())
          ;; compiler warns about making a local var below the top-level
          (with-no-warnings
@@ -178,6 +185,11 @@ Declare a prefix command for MAP named COMMAND-NAME."
            (setq ,activate (not (null (member major-mode ,major-mode-list)))))
          (add-hook 'change-major-mode-after-body-hook ',activate-func))
 
+       (when (and ,override-minor-modes
+                  (null ',major-modes)
+                  (null ',minor-modes))
+         (add-to-list 'emulation-mode-map-alists (list (cons t ,root-map))))
+
        (if (or ',minor-modes ',major-modes)
            ;;bind keys in root-map
            (progn
@@ -188,12 +200,12 @@ Declare a prefix command for MAP named COMMAND-NAME."
                 ',evil-states ,root-map (list ,@evil-keys) ',prefix-cmd)))
          ;;bind in global maps
          (dolist (key (list ,@keys))
-           (global-set-key (kbd key) ',prefix-cmd))
+           (if ,override-minor-modes
+               (define-key ,root-map (kbd key) ',prefix-cmd)
+             (global-set-key (kbd key) ',prefix-cmd)))
          (when ',evil-keys
            (bind-map-evil-global-define-key
-            ',evil-states (list ,@evil-keys) ',prefix-cmd
-            ;; ,evil-override-known-maps
-            ,evil-use-local))))))
+            ',evil-states (list ,@evil-keys) ',prefix-cmd ,evil-use-local))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload
@@ -266,13 +278,6 @@ STATES and KEYS. USE-LOCAL will bind the keys in the local state
 maps which have higher precedence than most evil maps."
   (require 'evil)
   (dolist (key keys)
-    ;; (when update-known-overriding
-    ;;   (eval-after-load 'ibuffer
-    ;;     `(evil-define-key 'normal ibuffer-mode-map (kbd ,key) ',def))
-    ;;   (eval-after-load 'dired
-    ;;     `(evil-define-key 'normal dired-mode-map (kbd ,key) ',def))
-    ;;   (dolist (map-cons evil-overriding-maps)
-    ;;     (define-key (symbol-value (car-safe map-cons)) key def)))
     (dolist (state states)
       (if use-local
           (push (list state (kbd key) def) bind-map-local-bindings)

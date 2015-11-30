@@ -255,7 +255,7 @@ to place in a local state map.")
 (defun bind-map-local-mode-hook ()
   (dolist (entry bind-map-local-bindings)
     (let ((map (intern (format "evil-%s-state-local-map" (car entry)))))
-      (when (symbol-value map)
+      (when (and (boundp map) (keymapp (symbol-value map)))
         (define-key (symbol-value map) (cadr entry) (caddr entry))))))
 (add-hook 'evil-local-mode-hook 'bind-map-local-mode-hook)
 

@@ -117,6 +117,12 @@ states.
 Symbols representing the states to use for :evil-keys. If nil,
 use `bind-map-default-evil-states'.
 
+:evil-use-local BOOL
+
+This places all evil bindings in the local state maps for evil.
+These maps have high precedence and will mask most other evil
+bindings.
+
 :major-modes (MODE1 MODE2 ...)
 
 If specified, the keys will only be bound when these major modes
@@ -142,6 +148,8 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (evil-keys (plist-get args :evil-keys))
          (evil-states (or (plist-get args :evil-states)
                           bind-map-default-evil-states))
+         ;; (evil-override-known-maps (plist-get args :evil-override-known-maps))
+         (evil-use-local (plist-get args :evil-use-local))
          (minor-modes (plist-get args :minor-modes))
          (major-modes (plist-get args :major-modes)))
     `(progn
@@ -182,8 +190,10 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (dolist (key (list ,@keys))
            (global-set-key (kbd key) ',prefix-cmd))
          (when ',evil-keys
-           (bind-map-evil-define-key
-            ',evil-states nil (list ,@evil-keys) ',prefix-cmd))))))
+           (bind-map-evil-global-define-key
+            ',evil-states (list ,@evil-keys) ',prefix-cmd
+            ;; ,evil-override-known-maps
+            ,evil-use-local))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload
@@ -236,11 +246,37 @@ STATES and KEYS."
   (require 'evil)
   (dolist (state states)
     (dolist (key keys)
-      (if map
-          (eval
-           `(evil-define-key ',state ',map (kbd ,key) ',def))
-        (eval
-         `(evil-global-set-key ',state (kbd ,key) ',def))))))
+      (eval `(evil-define-key ',state ',map (kbd ,key) ',def)))))
+
+(defvar bind-map-local-bindings '()
+  "Elements are (STATE KEY DEF) each corresponding to a binding
+to place in a local state map.")
+
+(defun bind-map-local-mode-hook ()
+  (dolist (entry bind-map-local-bindings)
+    (let ((map (intern (format "evil-%s-state-local-map" (car entry)))))
+      (when (symbol-value map)
+        (define-key (symbol-value map) (cadr entry) (caddr entry))))))
+(add-hook 'evil-local-mode-hook 'bind-map-local-mode-hook)
+
+(defun bind-map-evil-global-define-key
+    (states keys def &optional use-local)
+  "Version of `evil-define-key' that binds DEF across multiple
+STATES and KEYS. USE-LOCAL will bind the keys in the local state
+maps which have higher precedence than most evil maps."
+  (require 'evil)
+  (dolist (key keys)
+    ;; (when update-known-overriding
+    ;;   (eval-after-load 'ibuffer
+    ;;     `(evil-define-key 'normal ibuffer-mode-map (kbd ,key) ',def))
+    ;;   (eval-after-load 'dired
+    ;;     `(evil-define-key 'normal dired-mode-map (kbd ,key) ',def))
+    ;;   (dolist (map-cons evil-overriding-maps)
+    ;;     (define-key (symbol-value (car-safe map-cons)) key def)))
+    (dolist (state states)
+      (if use-local
+          (push (list state (kbd key) def) bind-map-local-bindings)
+        (eval `(evil-global-set-key ',state (kbd ,key) ',def))))))
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)

@@ -30,6 +30,16 @@ symbols of the modes are used, it is not necessary to ensure that any of the
 mode's packages are loaded prior to this declaration. See the docstring of
 =bind-map= for more options.
 
+This package will only make use of evil if one of the evil related keywords is
+specified. This declaration, for example, makes no use of the evil package.
+
+#+BEGIN_SRC emacs-lisp
+(bind-map my-elisp-map
+  :keys ("M-m m" "M-RET")
+  :major-modes (emacs-lisp-mode
+                lisp-interaction-mode))
+#+END_SRC
+
 The idea behind this package is that you want to organize your personal bindings
 in a series of keymaps separate from built-in mode maps. You can simply add keys
 using the built-in =define-key= to =my-elisp-map= for example, and a declaration

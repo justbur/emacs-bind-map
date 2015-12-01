@@ -116,6 +116,10 @@
 `bind-map-for-minor-mode'."
   :group 'bind-map)
 
+(defvar bind-map-local-bindings '()
+  "Each element of this list takes the form (STATE KEY DEF) and
+corresponds to a binding for an evil local state map.")
+
 ;;;###autoload
 (defmacro bind-map (map &rest args)
   "Bind keymap MAP in multiple locations.
@@ -281,10 +285,6 @@ concatenated with `bind-map-default-map-suffix'."
          ,@args)
        ',map-name)))
 (put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
-
-(defvar bind-map-local-bindings '()
-  "Elements are (STATE KEY DEF) each corresponding to a binding
-to place in a local state map.")
 
 (defun bind-map-local-mode-hook ()
   (dolist (entry bind-map-local-bindings)

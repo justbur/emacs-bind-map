@@ -23,60 +23,83 @@
 
 ;;; Commentary:
 
-;; bind-map is an Emacs package providing the macro `bind-map' which can be used
+;; bind-map is an Emacs package providing the macro bind-map which can be used
 ;; to make a keymap available across different "leader keys" including ones tied
 ;; to evil states. It is essentially a generalization of the idea of a leader
 ;; key as used in vim or the Emacs https://github.com/cofi/evil-leader package,
 ;; and allows for an arbitrary number of "leader keys". This is probably best
 ;; explained with an example.
 
-;; (bind-map my-lisp-map
+;; (bind-map my-base-leader-map
 ;;   :keys ("M-m")
 ;;   :evil-keys ("SPC")
-;;   :evil-states (normal visual)
-;;   :major-modes (emacs-lisp-mode
-;;                 lisp-interaction-mode
-;;                 lisp-mode))
+;;   :evil-states (normal motion visual))
 
-;; This will take my-lisp-map and make it available under the prefixes (or
-;; leaders) M-m and SPC, where the latter is only bound in evil's normal or
-;; visual state (defaults in `bind-map-default-evil-states') when one of the
-;; specified major mode is active (there is no need to make sure the respective
-;; modes' packages are loaded before this declaration). It is also possible to
-;; make the bindings conditional on minor modes being loaded, or a mix of major
-;; and minor modes. If no modes are specified, the relevant global maps are
-;; used. See the docstring of `bind-map' for more options.
+;; (bind-map my-elisp-map
+;;   :keys ("M-m m" "M-RET")
+;;   :evil-keys ("SPC m" ",")
+;;   :major-modes (emacs-lisp-mode
+;;                 lisp-interaction-mode))
+
+;; This will make my-base-leader-map (automatically creating the map if it's not
+;; defined yet) available under the prefixes (or leaders) M-m and SPC, where the
+;; latter is only bound in evil's normal, motion or visual states. The second
+;; declaration makes my-elisp-map available under the specified keys when one of
+;; the specified major modes is active. In the second case, the evil states used
+;; are also normal motion and visual because this is the default as specified in
+;; bind-map-default-evil-states. It is possible to make the bindings conditional
+;; on minor modes being loaded, or a mix of major and minor modes. Since the
+;; symbols of the modes are used, it is not necessary to ensure that any of the
+;; mode's packages are loaded prior to this declaration. See the docstring of
+;; bind-map for more options.
+
+;; This package will only make use of evil if one of the evil related keywords
+;; is specified. This declaration, for example, makes no use of the evil
+;; package.
+
+;; (bind-map my-elisp-map
+;;   :keys ("M-m m" "M-RET")
+;;   :major-modes (emacs-lisp-mode
+;;                 lisp-interaction-mode))
 
 ;; The idea behind this package is that you want to organize your personal
 ;; bindings in a series of keymaps separate from built-in mode maps. You can
-;; simply add keys using the built-in `define-key' to my-lisp-map for example,
+;; simply add keys using the built-in define-key to my-elisp-map for example,
 ;; and a declaration like the one above will take care of ensuring that these
 ;; bindings are available in the correct places.
 
 ;; Binding keys in the maps
 
-;; You may use the built-in `define-key' which will function as intended.
-;; `bind-key' (part of https://github.com/jwiegley/use-package) is another
-;; option. For those who want a different interface, the following functions are
-;; also provided, which both just use `define-key' internally, but allow for
-;; multiple bindings without much syntax.
+;; You may use the built-in define-key which will function as intended. bind-key
+;; (part of https://github.com/jwiegley/use-package) is another option. For
+;; those who want a different interface, the following functions are also
+;; provided, which both just use define-key internally, but allow for multiple
+;; bindings without much syntax.
 
-;; (bind-map-set-keys my-lisp-map
-;;   "c" 'compile
-;;   "C" 'check
+;;   (bind-map-set-keys my-base-leader-map
+;;     "c" 'compile
+;;     "C" 'check
+;;     ;; ...
+;;     )
+;;   ;; is the same as
+;;   ;; (define-key my-base-leader-map (kbd "c") 'compile)
+;;   ;; (define-key my-base-leader-map (kbd "C") 'check)
 ;;   ;; ...
-;;   )
-;; (bind-map-set-key-defaults my-lisp-map
-;;   "c" 'compile
-;;   "C" 'check
+
+;;   (bind-map-set-key-defaults my-base-leader-map
+;;     "c" 'compile
+;;     ;; ...
+;;     )
+;;   ;; is the same as
+;;   ;; (unless (lookup-key my-base-leader-map (kbd "c"))
+;;   ;;   (define-key my-base-leader-map (kbd "c") 'compile))
 ;;   ;; ...
-;;   )
 
 ;; The second function only adds the bindings if there is no existing binding
 ;; for that key. It is probably only useful for shared configurations, where you
 ;; want to provide a default binding but don't want that binding to overwrite
 ;; one made by the user. Note the keys in both functions are strings that are
-;; passed to `kbd' before binding them.
+;; passed to kbd before binding them.
 
 ;;; Code:
 
@@ -101,6 +124,9 @@ the name MAP. Supports binding in evil states and conditioning
 the bindings on major and/or minor modes being active. The
 options are controlled through the keyword arguments ARGS, all of
 which are optional.
+
+The package evil is only required if one of the :evil-keys is
+specified.
 
 :keys (KEY1 KEY2 ...)
 

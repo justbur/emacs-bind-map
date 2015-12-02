@@ -116,9 +116,12 @@
 `bind-map-for-minor-mode'."
   :group 'bind-map)
 
-(defvar bind-map-local-bindings '()
+(defvar bind-map-evil-local-bindings '()
   "Each element of this list takes the form (STATE KEY DEF) and
 corresponds to a binding for an evil local state map.")
+(defvaralias 'bind-map-local-bindings 'bind-map-evil-local-bindings)
+(make-obsolete-variable 'bind-map-local-bindings
+                        'bind-map-evil-local-bindings "2015-12-2")
 
 ;;;###autoload
 (defmacro bind-map (map &rest args)
@@ -157,7 +160,7 @@ use `bind-map-default-evil-states'.
 :evil-use-local BOOL
 
 This places all evil bindings in the local state maps for
-evil (as well as the global ones). These maps have high
+evil (in addition to the global ones). These maps have high
 precedence and will mask most other evil bindings. If
 either :major-modes or :minor-modes is specified, this setting
 has no effect.
@@ -239,7 +242,8 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (dolist (key (list ,@evil-keys))
            (dolist (state ',evil-states)
              (when ,evil-use-local
-               (push (list state (kbd key) ',prefix-cmd) bind-map-local-bindings))
+               (push (list state (kbd key) ',prefix-cmd)
+                     bind-map-evil-local-bindings))
              (evil-global-set-key state (kbd key) ',prefix-cmd)))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
@@ -287,12 +291,12 @@ concatenated with `bind-map-default-map-suffix'."
        ',map-name)))
 (put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
 
-(defun bind-map-local-mode-hook ()
-  (dolist (entry bind-map-local-bindings)
+(defun bind-map-evil-local-mode-hook ()
+  (dolist (entry bind-map-evil-local-bindings)
     (let ((map (intern (format "evil-%s-state-local-map" (car entry)))))
       (when (and (boundp map) (keymapp (symbol-value map)))
         (define-key (symbol-value map) (cadr entry) (caddr entry))))))
-(add-hook 'evil-local-mode-hook 'bind-map-local-mode-hook)
+(add-hook 'evil-local-mode-hook 'bind-map-evil-local-mode-hook)
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)

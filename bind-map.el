@@ -140,7 +140,7 @@ suitable for use in `kbd'.
 :override-minor-modes BOOL
 
 If non nil, make keys in :keys override the minor-mode maps, by
-using `emulation-mode-map-alists' instead of `global-map'. If
+using `emulation-mode-map-alists' instead of the `global-map'. If
 either :major-modes or :minor-modes is specified, this setting
 has no effect.
 
@@ -156,10 +156,11 @@ use `bind-map-default-evil-states'.
 
 :evil-use-local BOOL
 
-This places all evil bindings in the local state maps for evil.
-These maps have high precedence and will mask most other evil
-bindings. If either :major-modes or :minor-modes is specified,
-this setting has no effect.
+This places all evil bindings in the local state maps for
+evil (as well as the global ones). These maps have high
+precedence and will mask most other evil bindings. If
+either :major-modes or :minor-modes is specified, this setting
+has no effect.
 
 :major-modes (MODE1 MODE2 ...)
 
@@ -237,9 +238,9 @@ Declare a prefix command for MAP named COMMAND-NAME."
              (global-set-key (kbd key) ',prefix-cmd)))
          (dolist (key (list ,@evil-keys))
            (dolist (state ',evil-states)
-             (if ,evil-use-local
-                 (push (list state (kbd key) ',prefix-cmd) bind-map-local-bindings)
-               (evil-global-set-key state (kbd key) ',prefix-cmd))))))))
+             (when ,evil-use-local
+               (push (list state (kbd key) ',prefix-cmd) bind-map-local-bindings))
+             (evil-global-set-key state (kbd key) ',prefix-cmd)))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload

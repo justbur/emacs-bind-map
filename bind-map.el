@@ -117,8 +117,10 @@
   :group 'bind-map)
 
 (defvar bind-map-evil-local-bindings '()
-  "Each element of this list takes the form (STATE KEY DEF) and
-corresponds to a binding for an evil local state map.")
+  "Each element of this list takes the form (OVERRIDE-MODE STATE
+KEY DEF) and corresponds to a binding for an evil local state
+map. OVERRIDE-MODE is the minor mode that must be enabled for
+these to be activated.")
 (defvaralias 'bind-map-local-bindings 'bind-map-evil-local-bindings)
 (make-obsolete-variable 'bind-map-local-bindings
                         'bind-map-evil-local-bindings "2015-12-2")
@@ -143,9 +145,22 @@ suitable for use in `kbd'.
 :override-minor-modes BOOL
 
 If non nil, make keys in :keys override the minor-mode maps, by
-using `emulation-mode-map-alists' instead of the `global-map'. If
+using `emulation-mode-map-alists' instead of the `global-map'.
+This is done for the :evil-keys using evil local state maps. If
 either :major-modes or :minor-modes is specified, this setting
 has no effect.
+
+The overriding behavior can be toggled using the minor mode
+MAP-overriding-mode (the name of the minor mode can be customized
+in the next keyword). It is enabled by default when you specify
+this keyword.
+
+:override-mode-name SYMBOL
+
+The name to use for the minor mode described for the previous
+keyword (a default name will be given if this is left
+unspeficied). This setting as no effect if :override-minor-modes
+is nil or unspecified.
 
 :evil-keys (KEY1 KEY2 ...)
 
@@ -159,11 +174,9 @@ use `bind-map-default-evil-states'.
 
 :evil-use-local BOOL
 
-This places all evil bindings in the local state maps for
-evil (in addition to the global ones). These maps have high
-precedence and will mask most other evil bindings. If
-either :major-modes or :minor-modes is specified, this setting
-has no effect.
+(Deprecated) This is now equivalent to setting
+`:override-minor-modes' to t, which handles evil and non-evil
+keys now.
 
 :major-modes (MODE1 MODE2 ...)
 
@@ -187,11 +200,20 @@ Declare a prefix command for MAP named COMMAND-NAME."
          (prefix-cmd (or (plist-get args :prefix-cmd)
                          (intern (format "%s-prefix" map))))
          (keys (plist-get args :keys))
-         (override-minor-modes (plist-get args :override-minor-modes))
+         (override-minor-modes (or (plist-get args :override-minor-modes)
+                                   (plist-get args :evil-use-local)))
+         (override-mode (if (plist-get args :override-mode-name)
+                            (plist-get args :override-mode-name)
+                          (intern (format "%s-override-mode" map))))
+         (override-mode-doc (format "Minor mode that makes %s override minor \
+mode maps. Set up by bind-map.el." override-mode))
+         (global-override-mode (intern (format "global-%s" override-mode)))
+         (turn-on-override-mode (intern (format "turn-on-%s" override-mode)))
+         (turn-on-override-mode-doc (format "Enable `%s' except in minibuffer"
+                                   override-mode))
          (evil-keys (plist-get args :evil-keys))
          (evil-states (or (plist-get args :evil-states)
                           bind-map-default-evil-states))
-         (evil-use-local (plist-get args :evil-use-local))
          (minor-modes (plist-get args :minor-modes))
          (major-modes (plist-get args :major-modes)))
     `(progn
@@ -224,7 +246,16 @@ Declare a prefix command for MAP named COMMAND-NAME."
        (when (and ,override-minor-modes
                   (null ',major-modes)
                   (null ',minor-modes))
-         (add-to-list 'emulation-mode-map-alists (list (cons t ,root-map))))
+         (defun ,turn-on-override-mode ()
+           ,turn-on-override-mode-doc
+           (unless (minibufferp) (,override-mode 1)))
+         (define-globalized-minor-mode ,global-override-mode
+           ,override-mode ,turn-on-override-mode)
+         (define-minor-mode ,override-mode
+           ,override-mode-doc)
+         (add-to-list 'emulation-mode-map-alists
+                      (list (cons ',override-mode ,root-map)))
+         (,global-override-mode 1))
 
        (if (or ',minor-modes ',major-modes)
            ;;bind keys in root-map
@@ -236,13 +267,13 @@ Declare a prefix command for MAP named COMMAND-NAME."
                  (evil-define-key state ,root-map (kbd key) ',prefix-cmd))))
          ;;bind in global maps
          (dolist (key (list ,@keys))
-           (if ,override-minor-modes
-               (define-key ,root-map (kbd key) ',prefix-cmd)
-             (global-set-key (kbd key) ',prefix-cmd)))
+           (when ,override-minor-modes
+               (define-key ,root-map (kbd key) ',prefix-cmd))
+           (global-set-key (kbd key) ',prefix-cmd))
          (dolist (key (list ,@evil-keys))
            (dolist (state ',evil-states)
-             (when ,evil-use-local
-               (push (list state (kbd key) ',prefix-cmd)
+             (when ,override-minor-modes
+               (push (list ',override-mode state (kbd key) ',prefix-cmd)
                      bind-map-evil-local-bindings))
              (evil-global-set-key state (kbd key) ',prefix-cmd)))))))
 (put 'bind-map 'lisp-indent-function 'defun)
@@ -292,10 +323,13 @@ concatenated with `bind-map-default-map-suffix'."
 (put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
 
 (defun bind-map-evil-local-mode-hook ()
+  ;; format is (OVERRIDE-MODE STATE KEY DEF)
   (dolist (entry bind-map-evil-local-bindings)
-    (let ((map (intern (format "evil-%s-state-local-map" (car entry)))))
-      (when (and (boundp map) (keymapp (symbol-value map)))
-        (define-key (symbol-value map) (cadr entry) (caddr entry))))))
+    (let ((map (intern (format "evil-%s-state-local-map" (nth 1 entry)))))
+      (when (and (nth 0 entry)
+                 (boundp map)
+                 (keymapp (symbol-value map)))
+        (define-key (symbol-value map) (nth 2 entry) (nth 3 entry))))))
 (add-hook 'evil-local-mode-hook 'bind-map-evil-local-mode-hook)
 
 ;;;###autoload

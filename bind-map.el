@@ -137,7 +137,7 @@ which are optional.
 The package evil is only required if one of the :evil-keys is
 specified.
 
-:keys (KEY1 KEY2 ...)
+:keys \(KEY1 KEY2 ...\)
 
 The keys to use for the leader binding. These are strings
 suitable for use in `kbd'.
@@ -159,32 +159,32 @@ this keyword.
 
 The name to use for the minor mode described for the previous
 keyword (a default name will be given if this is left
-unspeficied). This setting as no effect if :override-minor-modes
-is nil or unspecified.
+unspecificied). This setting as no effect
+if :override-minor-modes is nil or unspecified.
 
-:evil-keys (KEY1 KEY2 ...)
+:evil-keys \(KEY1 KEY2 ...\)
 
 Like :keys but these bindings are only active in certain evil
 states.
 
-:evil-states (STATE1 STATE2 ...)
+:evil-states \(STATE1 STATE2 ...\)
 
 Symbols representing the states to use for :evil-keys. If nil,
 use `bind-map-default-evil-states'.
 
 :evil-use-local BOOL
 
-(Deprecated) This is now equivalent to setting
+\(Deprecated\) This is now equivalent to setting
 `:override-minor-modes' to t, which handles evil and non-evil
 keys now.
 
-:major-modes (MODE1 MODE2 ...)
+:major-modes \(MODE1 MODE2 ...\)
 
 If specified, the keys will only be bound when these major modes
 are active. If both :major-modes and :minor-modes are nil or
 unspecified the bindings are global.
 
-:minor-modes (MODE1 MODE2 ...)
+:minor-modes \(MODE1 MODE2 ...\)
 
 If specified, the keys will only be bound when these minor modes
 are active. If both :major-modes and :minor-modes are nil or
@@ -206,11 +206,11 @@ Declare a prefix command for MAP named COMMAND-NAME."
                             (plist-get args :override-mode-name)
                           (intern (format "%s-override-mode" map))))
          (override-mode-doc (format "Minor mode that makes %s override minor \
-mode maps. Set up by bind-map.el." override-mode))
+mode maps. Set up by bind-map.el." map))
          (global-override-mode (intern (format "global-%s" override-mode)))
          (turn-on-override-mode (intern (format "turn-on-%s" override-mode)))
          (turn-on-override-mode-doc (format "Enable `%s' except in minibuffer"
-                                   override-mode))
+                                            override-mode))
          (evil-keys (plist-get args :evil-keys))
          (evil-states (or (plist-get args :evil-states)
                           bind-map-default-evil-states))
@@ -268,7 +268,7 @@ mode maps. Set up by bind-map.el." override-mode))
          ;;bind in global maps
          (dolist (key (list ,@keys))
            (when ,override-minor-modes
-               (define-key ,root-map (kbd key) ',prefix-cmd))
+             (define-key ,root-map (kbd key) ',prefix-cmd))
            (global-set-key (kbd key) ',prefix-cmd))
          (dolist (key (list ,@evil-keys))
            (dolist (state ',evil-states)

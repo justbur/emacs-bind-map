@@ -264,7 +264,8 @@ mode maps. Set up by bind-map.el." map))
                (define-key ,root-map (kbd key) ',prefix-cmd))
              (dolist (key (list ,@evil-keys))
                (dolist (state ',evil-states)
-                 (evil-define-key state ,root-map (kbd key) ',prefix-cmd))))
+                 (define-key (evil-get-auxiliary-keymap ,root-map state t)
+                   (kbd key) ',prefix-cmd))))
          ;;bind in global maps
          (dolist (key (list ,@keys))
            (when ,override-minor-modes

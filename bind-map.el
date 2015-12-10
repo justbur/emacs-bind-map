@@ -241,6 +241,8 @@ mode maps. Set up by bind-map.el." map))
            (add-to-list ',major-mode-list mode))
          (defun ,activate-func ()
            (setq ,activate (not (null (member major-mode ,major-mode-list)))))
+         ;; call once in case we are already in the relevant major mode
+         (,activate-func)
          (add-hook 'change-major-mode-after-body-hook ',activate-func))
 
        (when (and ,override-minor-modes

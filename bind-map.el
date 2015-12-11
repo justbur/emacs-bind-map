@@ -251,10 +251,12 @@ mode maps. Set up by bind-map.el." map))
          (defun ,turn-on-override-mode ()
            ,turn-on-override-mode-doc
            (unless (minibufferp) (,override-mode 1)))
-         (define-globalized-minor-mode ,global-override-mode
-           ,override-mode ,turn-on-override-mode)
-         (define-minor-mode ,override-mode
-           ,override-mode-doc)
+         ;; for make-local warnings
+         (with-no-warnings
+           (define-globalized-minor-mode ,global-override-mode
+             ,override-mode ,turn-on-override-mode)
+           (define-minor-mode ,override-mode
+             ,override-mode-doc))
          (add-to-list 'emulation-mode-map-alists
                       (list (cons ',override-mode ,root-map)))
          (,global-override-mode 1))

@@ -298,7 +298,9 @@ mode maps. Set up by bind-map.el." map))
              (when ,override-minor-modes
                (push (list ',override-mode state (kbd key) ',prefix-cmd)
                      bind-map-evil-local-bindings))
-             (evil-global-set-key state (kbd key) ',prefix-cmd)))))))
+             (evil-global-set-key state (kbd key) ',prefix-cmd))))
+
+       (when ',evil-keys (evil-normalize-keymaps)))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload

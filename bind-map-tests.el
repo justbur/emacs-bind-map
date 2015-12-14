@@ -22,30 +22,56 @@
 
 (ert-deftest bind-map-test-global-keys ()
   "Test binding in global maps."
-  (let ((map (make-sparse-keymap)))
-    (bind-map map
+  (let ((tmpmap (make-sparse-keymap)))
+    (bind-map tmpmap
       :keys ("C-a")
       :evil-keys ("a")
       :evil-states (motion))
-    (define-key map "a" "b")
+    (define-key tmpmap "a" "b")
     (should (keymapp (lookup-key global-map "\C-a")))
     (should (string= (lookup-key global-map "\C-aa") "b"))
     (should (keymapp (lookup-key evil-motion-state-map "a")))
     (should (string= (lookup-key evil-motion-state-map "aa") "b"))
     (should (not (string= (lookup-key evil-visual-state-map "aa") "b")))))
 
+(ert-deftest bind-map-test-major-mode-keys ()
+  "Test binding for major-modes."
+  (let ((tmpmap (make-sparse-keymap))
+        (tmpmap-root-map (make-sparse-keymap))
+        tmpmap-active
+        tmpmap-prefix
+        bind-map-major-modes-alist
+        minor-mode-map-alist)
+    (bind-map tmpmap
+      :major-modes (emacs-lisp-mode)
+      :keys ("C-a")
+      :evil-keys ("a")
+      :evil-states (motion))
+    (evil-normalize-keymaps)
+    (emacs-lisp-mode)
+    (define-key tmpmap "a" "b")
+    (message "%s" (pp bind-map-major-modes-alist))
+    (should (equal (cdr (assoc 'tmpmap-active bind-map-major-modes-alist))
+                   '(emacs-lisp-mode)))
+    (should tmpmap-active)
+    (should (string= (key-binding "\C-aa") "b"))
+    (should (keymapp (lookup-key (evil-get-auxiliary-keymap tmpmap-root-map 'motion) "a")))
+    (should (string= (lookup-key (evil-get-auxiliary-keymap tmpmap-root-map 'motion) "aa") "b"))
+    (should (string= "b" (key-binding "\C-aa")))))
+
 (ert-deftest bind-map-test-minor-mode-keys ()
   "Test binding for minor-modes."
-  (let ((map (make-sparse-keymap))
-        (map-root-map (make-sparse-keymap))
+  (let ((tmpmap (make-sparse-keymap))
+        (tmpmap-root-map (make-sparse-keymap))
         (fake-minor-mode t)
         minor-mode-map-alist)
-    (bind-map map
+    (bind-map tmpmap
       :minor-modes (fake-minor-mode)
       :keys ("C-a")
       :evil-keys ("a")
       :evil-states (motion))
-    (define-key map "a" "b")
+    (evil-normalize-keymaps)
+    (define-key tmpmap "a" "b")
     (should (string= (key-binding "\C-aa") "b"))
-    (should (keymapp (lookup-key (evil-get-auxiliary-keymap map-root-map 'motion) "a")))
-    (should (string= (lookup-key (evil-get-auxiliary-keymap map-root-map 'motion) "aa") "b"))))
+    (should (keymapp (lookup-key (evil-get-auxiliary-keymap tmpmap-root-map 'motion) "a")))
+    (should (string= (lookup-key (evil-get-auxiliary-keymap tmpmap-root-map 'motion) "aa") "b"))))

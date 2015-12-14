@@ -270,7 +270,9 @@ mode maps. Set up by bind-map.el." map))
      (when (and override-minor-modes
                 (null major-modes)
                 (null minor-modes))
-       `((defun ,turn-on-override-mode ()
+       `((declare-function ,global-override-mode (buffer-file-name))
+         (declare-function ,override-mode (buffer-file-name))
+         (defun ,turn-on-override-mode ()
            ,turn-on-override-mode-doc
            (unless (minibufferp) (,override-mode 1)))
          ;; for make-local warnings

@@ -242,33 +242,35 @@ mode maps. Set up by bind-map.el." map))
                           bind-map-default-evil-states))
          (minor-modes (plist-get args :minor-modes))
          (major-modes (plist-get args :major-modes)))
-    `(progn
-       (when ',evil-keys (require 'evil))
+    (append
+     '(progn)
 
-       (defvar ,map (make-sparse-keymap))
+     (when evil-keys '((require 'evil)))
+
+     `((defvar ,map (make-sparse-keymap))
        (unless (keymapp ,map)
          (error "bind-map: %s is not a keymap" ',map))
        (defvar ,prefix-cmd nil)
        (setq ,prefix-cmd ,map)
        (setf (symbol-function ',prefix-cmd) ,map)
-       (defvar ,root-map (make-sparse-keymap))
+       (defvar ,root-map (make-sparse-keymap)))
 
-       (when ',minor-modes
-         (dolist (mode ',minor-modes)
-           (push (cons mode ,root-map) minor-mode-map-alist)))
+     (when minor-modes
+       `((dolist (mode ',minor-modes)
+           (push (cons mode ,root-map) minor-mode-map-alist))))
 
-       (when ',major-modes
-         ;; compiler warns about making a local var below the top-level
-         (with-no-warnings (defvar-local ,active-var nil))
+     (when major-modes
+       ;; compiler warns about making a local var below the top-level
+       `((with-no-warnings (defvar-local ,active-var nil))
          (push (cons ',active-var ,root-map) minor-mode-map-alist)
          (push (cons ',active-var ',major-modes) bind-map-major-modes-alist)
          ;; call once in case we are already in the relevant major mode
-         (bind-map-change-major-mode-after-body-hook))
+         (bind-map-change-major-mode-after-body-hook)))
 
-       (when (and ,override-minor-modes
-                  (null ',major-modes)
-                  (null ',minor-modes))
-         (defun ,turn-on-override-mode ()
+     (when (and override-minor-modes
+                (null major-modes)
+                (null minor-modes))
+       `((defun ,turn-on-override-mode ()
            ,turn-on-override-mode-doc
            (unless (minibufferp) (,override-mode 1)))
          ;; for make-local warnings
@@ -279,19 +281,18 @@ mode maps. Set up by bind-map.el." map))
              ,override-mode-doc))
          (add-to-list 'emulation-mode-map-alists
                       (list (cons ',override-mode ,root-map)))
-         (,global-override-mode 1))
+         (,global-override-mode 1)))
 
-       (if (or ',minor-modes ',major-modes)
-           ;;bind keys in root-map
-           (progn
-             (dolist (key (list ,@keys))
-               (define-key ,root-map (kbd key) ',prefix-cmd))
-             (dolist (key (list ,@evil-keys))
-               (dolist (state ',evil-states)
-                 (define-key (evil-get-auxiliary-keymap ,root-map state t)
-                   (kbd key) ',prefix-cmd))))
-         ;;bind in global maps
-         (dolist (key (list ,@keys))
+     (if (or minor-modes major-modes)
+         ;; only bind keys in root-map
+         `((dolist (key (list ,@keys))
+             (define-key ,root-map (kbd key) ',prefix-cmd))
+           (dolist (key (list ,@evil-keys))
+             (dolist (state ',evil-states)
+               (define-key (evil-get-auxiliary-keymap ,root-map state t)
+                 (kbd key) ',prefix-cmd))))
+       ;; bind in global maps and possibly root-map
+       `((dolist (key (list ,@keys))
            (when ,override-minor-modes
              (define-key ,root-map (kbd key) ',prefix-cmd))
            (global-set-key (kbd key) ',prefix-cmd))
@@ -300,9 +301,9 @@ mode maps. Set up by bind-map.el." map))
              (when ,override-minor-modes
                (push (list ',override-mode state (kbd key) ',prefix-cmd)
                      bind-map-evil-local-bindings))
-             (evil-global-set-key state (kbd key) ',prefix-cmd))))
+             (evil-global-set-key state (kbd key) ',prefix-cmd)))))
 
-       (when ',evil-keys (evil-normalize-keymaps)))))
+     (when evil-keys `((evil-normalize-keymaps))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload

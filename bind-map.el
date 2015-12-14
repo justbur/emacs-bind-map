@@ -146,8 +146,10 @@ when the major mode is an element of the cdr. See
   "Called to activate major mode maps in a buffer."
   ;; format is (ACTIVATE-VAR MAJOR-MODES-LIST)
   (dolist (entry bind-map-major-modes-alist)
-    (setf (symbol-value (car entry))
-          (not (null (member major-mode (cdr entry)))))))
+    (if (boundp (car entry))
+      (setf (symbol-value (car entry))
+            (not (null (member major-mode (cdr entry)))))
+      (message "bind-map: %s is void in change major mode hook" (car entry)))))
 (add-hook 'change-major-mode-after-body-hook
           'bind-map-change-major-mode-after-body-hook)
 

@@ -117,13 +117,24 @@
   :group 'bind-map)
 
 (defvar bind-map-evil-local-bindings '()
-  "Each element of this list takes the form (OVERRIDE-MODE STATE
-KEY DEF) and corresponds to a binding for an evil local state
-map. OVERRIDE-MODE is the minor mode that must be enabled for
-these to be activated.")
+  "Each element takes the form (OVERRIDE-MODE STATE KEY DEF) and
+corresponds to a binding for an evil local state map.
+OVERRIDE-MODE is the minor mode that must be enabled for these to
+be activated.")
 (defvaralias 'bind-map-local-bindings 'bind-map-evil-local-bindings)
 (make-obsolete-variable 'bind-map-local-bindings
                         'bind-map-evil-local-bindings "2015-12-2")
+
+(defun bind-map-evil-local-mode-hook ()
+  "Called to activate local state maps in a buffer."
+  ;; format is (OVERRIDE-MODE STATE KEY DEF)
+  (dolist (entry bind-map-evil-local-bindings)
+    (let ((map (intern (format "evil-%s-state-local-map" (nth 1 entry)))))
+      (when (and (nth 0 entry)
+                 (boundp map)
+                 (keymapp (symbol-value map)))
+        (define-key (symbol-value map) (nth 2 entry) (nth 3 entry))))))
+(add-hook 'evil-local-mode-hook 'bind-map-evil-local-mode-hook)
 
 ;;;###autoload
 (defmacro bind-map (map &rest args)
@@ -326,16 +337,6 @@ concatenated with `bind-map-default-map-suffix'."
          ,@args)
        ',map-name)))
 (put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
-
-(defun bind-map-evil-local-mode-hook ()
-  ;; format is (OVERRIDE-MODE STATE KEY DEF)
-  (dolist (entry bind-map-evil-local-bindings)
-    (let ((map (intern (format "evil-%s-state-local-map" (nth 1 entry)))))
-      (when (and (nth 0 entry)
-                 (boundp map)
-                 (keymapp (symbol-value map)))
-        (define-key (symbol-value map) (nth 2 entry) (nth 3 entry))))))
-(add-hook 'evil-local-mode-hook 'bind-map-evil-local-mode-hook)
 
 ;;;###autoload
 (defun bind-map-set-keys (map key def &rest bindings)

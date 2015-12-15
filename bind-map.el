@@ -270,20 +270,17 @@ mode maps. Set up by bind-map.el." map))
      (when (and override-minor-modes
                 (null major-modes)
                 (null minor-modes))
-       `((declare-function ,global-override-mode (buffer-file-name))
-         (declare-function ,override-mode (buffer-file-name))
-         (defun ,turn-on-override-mode ()
-           ,turn-on-override-mode-doc
-           (unless (minibufferp) (,override-mode 1)))
-         ;; for make-local warnings
-         (with-no-warnings
+       `((with-no-warnings
+           (defun ,turn-on-override-mode ()
+             ,turn-on-override-mode-doc
+             (unless (minibufferp) (,override-mode 1)))
            (define-globalized-minor-mode ,global-override-mode
              ,override-mode ,turn-on-override-mode)
            (define-minor-mode ,override-mode
-             ,override-mode-doc))
+             ,override-mode-doc)
+           (,global-override-mode 1))
          (add-to-list 'emulation-mode-map-alists
-                      (list (cons ',override-mode ,root-map)))
-         (,global-override-mode 1)))
+                      (list (cons ',override-mode ,root-map)))))
 
      (if (or minor-modes major-modes)
          ;; only bind keys in root-map

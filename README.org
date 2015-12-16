@@ -1,3 +1,4 @@
+[[https://travis-ci.org/justbur/emacs-bind-map][file:https://travis-ci.org/justbur/emacs-bind-map.svg?branch=master]] [[http://melpa.org/#/bind-map][file:http://melpa.org/packages/bind-map-badge.svg]]
 
 * bind-map
 bind-map is an Emacs package providing the macro =bind-map= which can be used to

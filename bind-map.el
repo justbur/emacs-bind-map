@@ -296,14 +296,8 @@ mode maps. Set up by bind-map.el." map))
              (define-key ,root-map key ',prefix-cmd))
            (dolist (key (bind-map-kbd-keys (list ,@evil-keys)))
              (dolist (state ',evil-states)
-               (when ',major-modes
-                 (define-key
-                   (evil-get-auxiliary-keymap ,root-map state t)
-                   key ',prefix-cmd))
-               (dolist (mode ',minor-modes)
-                 (when (fboundp 'evil-define-minor-mode-key)
-                   (evil-define-minor-mode-key
-                    state mode key ',prefix-cmd))))))
+               (define-key (evil-get-auxiliary-keymap ,root-map state t)
+                 key ',prefix-cmd))))
        ;; bind in global maps and possibly root-map
        `((dolist (key (bind-map-kbd-keys (list ,@keys)))
            (when ,override-minor-modes

@@ -72,6 +72,4 @@
       :evil-states (motion))
     (evil-normalize-keymaps)
     (define-key tmpmap "a" "b")
-    (should (string= (key-binding "\C-aa") "b"))
-    (should (keymapp (lookup-key (evil-get-auxiliary-keymap tmpmap-root-map 'motion) "a")))
-    (should (string= (lookup-key (evil-get-auxiliary-keymap tmpmap-root-map 'motion) "aa") "b"))))
+    (should (string= (key-binding "\C-aa") "b"))))

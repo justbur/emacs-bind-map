@@ -73,3 +73,16 @@
     (evil-normalize-keymaps)
     (define-key tmpmap "a" "b")
     (should (string= (key-binding "\C-aa") "b"))))
+
+(ert-deftest bind-map-multiple-declarations ()
+  (let ((tmpmap (make-sparse-keymap))
+        tmpmap-root-map
+        minor-mode-map-alist bind-map-major-modes-alist)
+    (bind-map tmpmap
+      :major-modes (mm1 mm2))
+    (bind-map tmpmap
+      :major-modes (mm3 mm4 mm5))
+    (bind-map tmpmap
+      :major-modes (mm6))
+    (should (equal (cdr (assq 'tmpmap-active bind-map-major-modes-alist))
+                   '(mm1 mm2 mm3 mm4 mm5 mm6)))))

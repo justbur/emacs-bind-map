@@ -153,6 +153,17 @@ when the major mode is an element of the cdr. See
 (add-hook 'change-major-mode-after-body-hook
           'bind-map-change-major-mode-after-body-hook)
 
+(defun bind-map-add-to-major-mode-list (activate-var major-mode-list)
+  "Add (ACTIVATE-VAR . MAJOR-MODE-LIST) to
+`bind-map-major-modes-alist'. If ACTIVATE-VAR is already a key,
+then append MAJOR-MODE-LIST to the existing cdr."
+  (let ((current (assq activate-var bind-map-major-modes-alist)))
+    (if current
+        (setcdr current (append (cdr current)
+                                major-mode-list))
+      (push (cons activate-var major-mode-list)
+            bind-map-major-modes-alist))))
+
 (defun bind-map-kbd-keys (keys)
   "Apply `kbd' to KEYS filtering out nil and empty strings."
   (let (res)
@@ -270,8 +281,8 @@ mode maps. Set up by bind-map.el." map))
      (when major-modes
        ;; compiler warns about making a local var below the top-level
        `((with-no-warnings (defvar-local ,active-var nil))
-         (push (cons ',active-var ,root-map) minor-mode-map-alist)
-         (push (cons ',active-var ',major-modes) bind-map-major-modes-alist)
+         (add-to-list 'minor-mode-map-alist (cons ',active-var ,root-map))
+         (bind-map-add-to-major-mode-list ',active-var ',major-modes)
          ;; call once in case we are already in the relevant major mode
          (bind-map-change-major-mode-after-body-hook)))
 

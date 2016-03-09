@@ -187,8 +187,8 @@ the bindings on major and/or minor modes being active. The
 options are controlled through the keyword arguments ARGS, all of
 which are optional.
 
-The package evil is only required if one of the :evil-keys is
-specified.
+Keys for evil-mode are bound using `eval-after-load', so they
+will only take effect after evil is loaded.
 
 :keys \(KEY1 KEY2 ...\)
 
@@ -270,8 +270,6 @@ mode maps. Set up by bind-map.el." map))
     (append
      '(progn)
 
-     (when evil-keys '((require 'evil)))
-
      `((defvar ,map (make-sparse-keymap))
        (unless (keymapp ,map)
          (error "bind-map: %s is not a keymap" ',map))
@@ -310,30 +308,37 @@ mode maps. Set up by bind-map.el." map))
      (if (or minor-modes major-modes)
          ;; only bind keys in root-map
          `((dolist (key (bind-map-kbd-keys (list ,@keys)))
-             (define-key ,root-map key ',prefix-cmd))
-           (dolist (key (bind-map-kbd-keys (list ,@evil-keys)))
-             (dolist (state ',evil-states)
-               (when ',major-modes
-                 (define-key
-                   (evil-get-auxiliary-keymap ,root-map state t)
-                   key ',prefix-cmd))
-               (dolist (mode ',minor-modes)
-                 (when (fboundp 'evil-define-minor-mode-key)
-                   (evil-define-minor-mode-key
-                    state mode key ',prefix-cmd))))))
+             (define-key ,root-map key ',prefix-cmd)))
        ;; bind in global maps and possibly root-map
        `((dolist (key (bind-map-kbd-keys (list ,@keys)))
            (when ,override-minor-modes
              (define-key ,root-map key ',prefix-cmd))
-           (global-set-key key ',prefix-cmd))
-         (dolist (key (bind-map-kbd-keys (list ,@evil-keys)))
-           (dolist (state ',evil-states)
-             (when ,override-minor-modes
-               (push (list ',override-mode state key ',prefix-cmd)
-                     bind-map-evil-local-bindings))
-             (evil-global-set-key state key ',prefix-cmd)))))
+           (global-set-key key ',prefix-cmd))))
 
-     (when evil-keys `((evil-normalize-keymaps))))))
+     (when evil-keys
+       (if (or minor-modes major-modes)
+	   `((eval-after-load 'evil
+	       '(progn
+		  (dolist (key (bind-map-kbd-keys (list ,@evil-keys)))
+		    (dolist (state ',evil-states)
+		      (when ',major-modes
+			(define-key
+			  (evil-get-auxiliary-keymap ,root-map state t)
+			  key ',prefix-cmd))
+		      (dolist (mode ',minor-modes)
+			(when (fboundp 'evil-define-minor-mode-key)
+			  (evil-define-minor-mode-key
+			   state mode key ',prefix-cmd)))))
+		  (evil-normalize-keymaps))))
+	 `((eval-after-load 'evil
+	     '(progn
+		(dolist (key (bind-map-kbd-keys (list ,@evil-keys)))
+		  (dolist (state ',evil-states)
+		    (when ,override-minor-modes
+		      (push (list ',override-mode state key ',prefix-cmd)
+			    bind-map-evil-local-bindings))
+		    (evil-global-set-key state key ',prefix-cmd)))
+		(evil-normalize-keymaps)))))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 ;;;###autoload

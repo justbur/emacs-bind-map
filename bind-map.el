@@ -386,7 +386,7 @@ or :minor-modes and will throw an error if not.
 The arguments that get recycled from PARENT (unless a new value
 is provided) are :override-minor-modes, :keys, :evil-keys,
 and :evil-states. All others must be declared explicitly."
-  (declare (indent defun))
+  (declare (indent 2))
   (let* ((parent-args (symbol-plist parent))
          (minor-modes (plist-get args :minor-modes))
          (major-modes (plist-get args :major-modes))

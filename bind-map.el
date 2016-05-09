@@ -252,7 +252,12 @@ unspecified the bindings are global.
 
 :prefix-cmd COMMAND-NAME
 
-Declare a prefix command for MAP named COMMAND-NAME."
+Declare a prefix command for MAP named COMMAND-NAME.
+
+:bindings \(KEY1 BINDING1 KEY2 BINDING2 ...\)
+
+Bind keys when declaring the map. This is optional, but added as
+a convenience."
   (let* ((root-map (intern (format "%s-root-map" map)))
          (active-var (intern (format "%s-active" map)))
          (prefix-cmd (or (plist-get args :prefix-cmd)
@@ -273,7 +278,8 @@ mode maps. Set up by bind-map.el." map))
          (evil-states (or (plist-get args :evil-states)
                           bind-map-default-evil-states))
          (minor-modes (plist-get args :minor-modes))
-         (major-modes (plist-get args :major-modes)))
+         (major-modes (plist-get args :major-modes))
+         (bindings (plist-get args :bindings)))
     (append
      '(progn)
 
@@ -358,7 +364,11 @@ mode maps. Set up by bind-map.el." map))
 		      (push (list ',override-mode state key ',prefix-cmd)
 			    bind-map-evil-local-bindings))
 		    (evil-global-set-key state key ',prefix-cmd)))
-		(evil-normalize-keymaps)))))))))
+		(evil-normalize-keymaps))))))
+
+     (when bindings
+       `((bind-map-set-keys ,map
+           ,@bindings))))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 (defun bind-map--get-prop (keyword args parent-args)
@@ -379,7 +389,8 @@ and :evil-states. All others must be declared explicitly."
   (declare (indent defun))
   (let* ((parent-args (symbol-plist parent))
          (minor-modes (plist-get args :minor-modes))
-         (major-modes (plist-get args :major-modes)))
+         (major-modes (plist-get args :major-modes))
+         (bindings (plist-get args :bindings)))
     `(progn
        (if (and (null ',minor-modes)
                 (null ',major-modes))
@@ -390,6 +401,7 @@ reference to :major-modes or :minor-modes")
            :override-mode-name ,(plist-get args :override-mode-name)
            :minor-modes ,minor-modes
            :major-modes ,major-modes
+           :bindings ,bindings
            ,@(bind-map--get-prop :override-minor-modes args parent-args)
            ,@(bind-map--get-prop :keys args parent-args)
            ,@(bind-map--get-prop :evil-keys args parent-args)

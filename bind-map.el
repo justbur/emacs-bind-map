@@ -389,21 +389,20 @@ and :evil-states. All others must be declared explicitly."
          (minor-modes (plist-get args :minor-modes))
          (major-modes (plist-get args :major-modes))
          (bindings (plist-get args :bindings)))
-    `(progn
-       (if (and (null ',minor-modes)
-                (null ',major-modes))
-           (user-error "bind-map-for-modes-derived called without \
-reference to :major-modes or :minor-modes")
-         (bind-map ,map
-           :prefix-cmd ,(plist-get args :prefix-cmd)
-           :override-mode-name ,(plist-get args :override-mode-name)
-           :minor-modes ,minor-modes
-           :major-modes ,major-modes
-           :bindings ,bindings
-           ,@(bind-map--get-prop :override-minor-modes args parent-args)
-           ,@(bind-map--get-prop :keys args parent-args)
-           ,@(bind-map--get-prop :evil-keys args parent-args)
-           ,@(bind-map--get-prop :evil-states args parent-args))))))
+    (when (and (null minor-modes)
+               (null major-modes))
+      (user-error "bind-map-for-modes-derived called without \
+reference to :major-modes or :minor-modes"))
+    `(bind-map ,map
+       :prefix-cmd ,(plist-get args :prefix-cmd)
+       :override-mode-name ,(plist-get args :override-mode-name)
+       :minor-modes ,minor-modes
+       :major-modes ,major-modes
+       :bindings ,bindings
+       ,@(bind-map--get-prop :override-minor-modes args parent-args)
+       ,@(bind-map--get-prop :keys args parent-args)
+       ,@(bind-map--get-prop :evil-keys args parent-args)
+       ,@(bind-map--get-prop :evil-states args parent-args))))
 
 ;;;###autoload
 (defmacro bind-map-for-major-mode (major-mode-sym &rest args)

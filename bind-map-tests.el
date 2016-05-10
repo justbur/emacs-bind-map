@@ -22,110 +22,122 @@
 
 (ert-deftest bind-map-test-global-keys ()
   "Test binding in global maps."
-  (let ((tmpmap1 (make-sparse-keymap)))
-    (bind-map tmpmap1
+  (let (minor-mode-alist minor-mode-map-alist minor-mode-list)
+    (bind-map bind-map-test-map-global
       :keys ("C-a")
       :evil-keys ("a")
       :evil-states (motion))
-    (define-key tmpmap1 "a" "b")
+    (define-key bind-map-test-map-global "a" "b")
     (should (keymapp (lookup-key global-map "\C-a")))
     (should (string= (lookup-key global-map "\C-aa") "b"))
     (should (keymapp (lookup-key evil-motion-state-map "a")))
     (should (string= (lookup-key evil-motion-state-map "aa") "b"))
-    (should (not (string= (lookup-key evil-visual-state-map "aa") "b")))))
+    (should (not (string= (lookup-key evil-visual-state-map "aa") "b")))
+    (with-temp-buffer
+      (evil-local-mode 1)
+      (evil-motion-state)
+      (should (string= (key-binding "\C-aa") "b")))
+    (setq bind-map-test-map-global (make-sparse-keymap)
+          bind-map-test-map-global-prefix (make-sparse-keymap))
+    (global-set-key "\C-a" nil)))
 
 (ert-deftest bind-map-test-major-mode-keys ()
   "Test binding for major-modes."
-  (let ((tmpmap2 (make-sparse-keymap))
-        (tmpmap2-root-map (make-sparse-keymap))
-        tmpmap2-active
-        tmpmap2-prefix
-        bind-map-major-modes-alist
-        minor-mode-alist
-        minor-mode-map-alist)
-    (with-temp-buffer
-      (bind-map tmpmap2
-        :major-modes (emacs-lisp-mode)
-        :keys ("C-a")
-        :evil-keys ("a")
-        :evil-states (motion))
-      (evil-normalize-keymaps)
-      (emacs-lisp-mode)
-      (define-key tmpmap2 "a" "b")
-      (message "%s" (pp bind-map-major-modes-alist))
-      (should (equal (cdr (assoc 'tmpmap2-active bind-map-major-modes-alist))
-                     '(emacs-lisp-mode)))
-      (should tmpmap2-active)
-      (should (string= (key-binding "\C-aa") "b"))
-      (should (keymapp (lookup-key (evil-get-auxiliary-keymap tmpmap2-root-map 'motion) "a")))
-      (should (string= (lookup-key (evil-get-auxiliary-keymap tmpmap2-root-map 'motion) "aa") "b"))
-      (should (string= "b" (key-binding "\C-aa"))))))
-
-(ert-deftest bind-map-test-minor-mode-keys ()
-  "Test binding for minor-modes."
-  (let ((tmpmap3 (make-sparse-keymap))
-        (tmpmap3-root-map (make-sparse-keymap))
-        (fake-minor-mode t)
-        minor-mode-map-alist
-        minor-mode-alist)
-    (bind-map tmpmap3
-      :minor-modes (fake-minor-mode)
+  (let (bind-map-major-modes-alist minor-mode-map-alist)
+    (bind-map bind-map-test-map-major-mode
+      :major-modes (emacs-lisp-mode)
       :keys ("C-a")
       :evil-keys ("a")
       :evil-states (motion))
-    (evil-normalize-keymaps)
-    (define-key tmpmap3 "a" "b")
-    (should (string= (key-binding "\C-aa") "b"))))
+    (define-key bind-map-test-map-major-mode "a" "c")
+    (with-temp-buffer
+      (emacs-lisp-mode)
+      (evil-normalize-keymaps)
+      (should (equal (cdr (assoc
+                           'bind-map-test-map-major-mode-active
+                           bind-map-major-modes-alist))
+                     '(emacs-lisp-mode)))
+      (should bind-map-test-map-major-mode-active)
+      (should (string= (key-binding "\C-aa") "c"))
+      (should (keymapp (lookup-key
+                        (evil-get-auxiliary-keymap
+                         bind-map-test-map-major-mode-root-map 'motion) "a")))
+      (should (string= (lookup-key
+                        (evil-get-auxiliary-keymap
+                         bind-map-test-map-major-mode-root-map 'motion) "aa") "c"))
+      (should (string= "c" (key-binding "\C-aa"))))
+    (setq bind-map-test-map-major-mode (make-sparse-keymap)
+          bind-map-test-map-major-mode-prefix (make-sparse-keymap))))
 
-(ert-deftest bind-map-multiple-declarations ()
-  (let ((tmpmap4 (make-sparse-keymap))
-        tmpmap4-root-map
-        minor-mode-map-alist bind-map-major-modes-alist)
-    (bind-map tmpmap4
+(ert-deftest bind-map-test-minor-mode-keys ()
+  "Test binding for minor-modes."
+  (let (minor-mode-alist minor-mode-map-alist minor-mode-list)
+    (bind-map bind-map-test-map-minor-mode
+      :minor-modes (bind-map-test-minor-mode)
+      :keys ("C-a")
+      :evil-keys ("a")
+      :evil-states (motion))
+    (defvar bind-map-test-minor-mode)
+    (define-key bind-map-test-map-minor-mode "a" "d")
+    (let ((bind-map-test-minor-mode t))
+      (evil-normalize-keymaps)
+      (should (string= (key-binding "\C-aa") "d")))
+    (setq bind-map-test-map-minor-mode (make-sparse-keymap)
+          bind-map-test-map-major-mode-prefix (make-sparse-keymap))))
+
+(ert-deftest bind-map-test-multiple-declarations ()
+  (let (bind-map-major-modes-alist minor-mode-map-alist)
+    (bind-map bind-map-test-map-mult-decl
       :major-modes (mm1 mm2))
-    (bind-map tmpmap4
+    (bind-map bind-map-test-map-mult-decl
       :major-modes (mm3 mm4 mm5))
-    (bind-map tmpmap4
+    (bind-map bind-map-test-map-mult-decl
       :major-modes (mm6))
-    (should (equal (cdr (assq 'tmpmap4-active bind-map-major-modes-alist))
+    (should (equal (cdr (assq 'bind-map-test-map-mult-decl-active
+                              bind-map-major-modes-alist))
                    '(mm1 mm2 mm3 mm4 mm5 mm6)))))
 
-(ert-deftest bind-map-test-minor-mode-inheritance ()
-  (with-temp-buffer
-    (let ((tmpmap5 (make-sparse-keymap))
-          (tmpmap6 (make-sparse-keymap))
-          (fake-minor-mode t)
-          minor-mode-alist
-          minor-mode-map-alist)
-      (bind-map tmpmap5
-        :keys ("C-a")
-        :evil-keys ("a")
-        :evil-states (normal))
-      (bind-map-for-mode-inherit tmpmap6 tmpmap5
-        :minor-modes (fake-minor-mode))
-      (define-key tmpmap6 "a" 'asdf)
-      (should (string= (key-binding "\C-aa") 'asdf))
-      (evil-local-mode 1)
-      (evil-motion-state)
-      (message "%s" evil-state)
-      (should (string= (key-binding "aa") 'asdf)))))
+;; (ert-deftest bind-map-test-minor-inheritance ()
+;;   (let (minor-mode-list minor-mode-map-alist minor-mode-alist)
+;;     (bind-map bind-map-test-map-minor-parent
+;;       :keys ("C-a")
+;;       :evil-keys ("a")
+;;       :evil-states (motion))
+;;     (bind-map-for-mode-inherit bind-map-test-map-minor-child
+;;         bind-map-test-map-minor-parent
+;;       :minor-modes (bind-map-test-minor-mode-inheritance))
+;;     (message "%s" (pp bind-map-test-map-minor-child-root-map))
+;;     (defvar bind-map-test-minor-mode-inheritance)
+;;     (define-key bind-map-test-map-minor-child "a" 'asdf)
+;;     (message "%s" (pp bind-map-test-map-minor-child-root-map))
+;;     (let ((bind-map-test-minor-mode-inheritance t))
+;;       (message "%s" (pp bind-map-test-map-minor-child-root-map))
+;;       (should (eq (key-binding "\C-aa") 'asdf))
+;;       (with-temp-buffer
+;;         (evil-local-mode 1)
+;;         (evil-motion-state)
+;;         (should (eq (key-binding "aa") 'asdf))))
+;;     (setq bind-map-test-map-minor-child (make-sparse-keymap)
+;;           bind-map-test-map-minor-child-prefix (make-sparse-keymap))
+;;     (global-set-key "\C-a" nil)))
 
-(ert-deftest bind-map-test-major-mode-inheritance ()
-  (with-temp-buffer
-    (let ((tmpmap7 (make-sparse-keymap))
-          (tmpmap8 (make-sparse-keymap))
-          minor-mode-alist
-          minor-mode-map-alist)
-      (bind-map tmpmap7
-        :keys ("C-a")
-        :evil-keys ("a")
-        :evil-states (normal))
-      (bind-map-for-mode-inherit tmpmap8 tmpmap7
-        :major-modes (emacs-lisp-mode))
-      (define-key tmpmap8 "a" 'asdf)
-      (evil-normalize-keymaps)
-      (emacs-lisp-mode)
-      (should (string= (key-binding "\C-aa") 'asdf))
-      (evil-local-mode 1)
-      (evil-motion-state)
-      (should (string= (key-binding "aa") 'asdf)))))
+;; (ert-deftest bind-map-test-major-inheritance ()
+;;   (let (minor-mode-map-alist)
+;;     (bind-map bind-map-test-map-major-parent
+;;       :keys ("C-a")
+;;       :evil-keys ("a")
+;;       :evil-states (motion))
+;;     (bind-map-for-mode-inherit bind-map-test-map-major-child
+;;         bind-map-test-map-major-parent
+;;       :major-modes (emacs-lisp-mode))
+;;     (define-key bind-map-test-map-major-child "a" 'asdf)
+;;     (with-temp-buffer
+;;       (evil-normalize-keymaps)
+;;       (emacs-lisp-mode)
+;;       (should (eq (key-binding "\C-aa") 'asdf))
+;;       (evil-local-mode 1)
+;;       (evil-motion-state)
+;;       (should (eq (key-binding "aa") 'asdf)))
+;;     (setq bind-map-test-map-major-child (make-sparse-keymap)
+;;           bind-map-test-map-major-child-prefix (make-sparse-keymap))
+;;     (global-set-key "\C-a" nil)))

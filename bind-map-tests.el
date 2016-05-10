@@ -108,12 +108,9 @@
      '(bind-map-for-mode-inherit bind-map-test-map-minor-child
          bind-map-test-map-minor-parent
         :minor-modes (bind-map-test-minor-mode-inheritance)))
-    (message "%s" (pp bind-map-test-map-minor-child-root-map))
     (defvar bind-map-test-minor-mode-inheritance)
     (define-key bind-map-test-map-minor-child "a" "e")
-    (message "%s" (pp bind-map-test-map-minor-child-root-map))
     (let ((bind-map-test-minor-mode-inheritance t))
-      (message "%s" (pp bind-map-test-map-minor-child-root-map))
       (should (string= (key-binding "\C-aa") "e"))
       (evil-local-mode 1)
       (evil-motion-state)

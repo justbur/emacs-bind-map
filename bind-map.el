@@ -366,7 +366,9 @@ mode maps. Set up by bind-map.el." map))
 
      (when bindings
        `((bind-map-set-keys ,map
-           ,@bindings))))))
+           ,@bindings)))
+
+     `(',map))))
 (put 'bind-map 'lisp-indent-function 'defun)
 
 (defun bind-map--get-prop (keyword args parent-args)
@@ -419,11 +421,9 @@ generated keymap is returned, which is MAJOR-MODE-SYM concatenated
 with `bind-map-default-map-suffix'."
   (let ((map-name (intern (concat (symbol-name major-mode-sym)
                                   bind-map-default-map-suffix))))
-    `(progn
-       (bind-map ,map-name
-         :major-modes (,major-mode-sym)
-         ,@args)
-       ',map-name)))
+    `(bind-map ,map-name
+       :major-modes (,major-mode-sym)
+       ,@args)))
 (put 'bind-map-for-major-mode 'lisp-indent-function 'defun)
 
 ;;;###autoload
@@ -441,11 +441,9 @@ generated keymap is returned, which is MINOR-MODE-SYM
 concatenated with `bind-map-default-map-suffix'."
   (let ((map-name (intern (concat (symbol-name minor-mode-sym)
                                   bind-map-default-map-suffix))))
-    `(progn
-       (bind-map ,map-name
-         :minor-modes (,minor-mode-sym)
-         ,@args)
-       ',map-name)))
+    `(bind-map ,map-name
+       :minor-modes (,minor-mode-sym)
+       ,@args)))
 (put 'bind-map-for-minor-mode 'lisp-indent-function 'defun)
 
 ;;;###autoload

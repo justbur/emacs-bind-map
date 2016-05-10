@@ -375,7 +375,7 @@ mode maps. Set up by bind-map.el." map))
             (plist-get parent-args keyword))))
 
 ;;;###autoload
-(defmacro bind-map-for-modes-derived (map parent &rest args)
+(defmacro bind-map-for-mode-inherit (map parent &rest args)
   "Same as `bind-map' for MAP, except use some arguments from
 PARENT as defaults, which must be another map declared with
 `bind-map'. This is intended to be used with :major-modes

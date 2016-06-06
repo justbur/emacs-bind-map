@@ -107,8 +107,16 @@
   "Bind personal keymaps in multiple locations."
   :group 'emacs)
 
+(defcustom bind-map-default-keys nil
+  "Default for :keys when unspecified."
+  :group 'bind-map)
+
 (defcustom bind-map-default-evil-states '(normal motion visual)
   "Default states for evil bindings."
+  :group 'bind-map)
+
+(defcustom bind-map-default-evil-keys nil
+  "Default for :evil-keys when unspecified."
   :group 'bind-map)
 
 (defcustom bind-map-default-map-suffix "-bm-map"
@@ -262,7 +270,8 @@ a convenience."
          (active-var (intern (format "%s-active" map)))
          (prefix-cmd (or (plist-get args :prefix-cmd)
                          (intern (format "%s-prefix" map))))
-         (keys (plist-get args :keys))
+         (keys (or (plist-get args :keys)
+                   bind-map-default-keys))
          (override-minor-modes (or (plist-get args :override-minor-modes)
                                    (plist-get args :evil-use-local)))
          (override-mode (if (plist-get args :override-mode-name)
@@ -274,7 +283,8 @@ mode maps. Set up by bind-map.el." map))
          (turn-on-override-mode (intern (format "turn-on-%s" override-mode)))
          (turn-on-override-mode-doc (format "Enable `%s' except in minibuffer"
                                             override-mode))
-         (evil-keys (plist-get args :evil-keys))
+         (evil-keys (or (plist-get args :evil-keys)
+                        bind-map-default-evil-keys))
          (evil-states (or (plist-get args :evil-states)
                           bind-map-default-evil-states))
          (minor-modes (plist-get args :minor-modes))

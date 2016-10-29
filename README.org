@@ -50,29 +50,37 @@ in the correct places.
 ** Binding keys in the maps
 You may use the built-in =define-key= which will function as intended.
 =bind-key= (part of [[https://github.com/jwiegley/use-package][use-package]]) is another option. For those who want a
-different interface, the following functions are also provided, which both just
-use =define-key= internally, but allow for multiple bindings without much
-syntax.
+different interface, you may either use the =:bindings= keyword in the
+=bind-map= macro or the two provided functions =bind-map-set-keys= and
+=bind-map-set-key-defaults=, which both just use =define-key= internally, but
+allow for multiple bindings without much syntax.
 
 #+BEGIN_SRC emacs-lisp
+  (bind-map my-base-leader-map
+    :keys ("M-m")
+    :evil-keys ("SPC")
+    :evil-states (normal motion visual)
+    :bindings ("c" 'compile
+               "C" 'check))
+
   (bind-map-set-keys my-base-leader-map
     "c" 'compile
     "C" 'check
     ;; ...
     )
-  ;; is the same as
-  ;; (define-key my-base-leader-map (kbd "c") 'compile)
-  ;; (define-key my-base-leader-map (kbd "C") 'check)
-  ;; ...
+    ;; is the same as
+    ;; (define-key my-base-leader-map (kbd "c") 'compile)
+    ;; (define-key my-base-leader-map (kbd "C") 'check)
+    ;; ...
 
   (bind-map-set-key-defaults my-base-leader-map
     "c" 'compile
     ;; ...
     )
-  ;; is the same as
-  ;; (unless (lookup-key my-base-leader-map (kbd "c"))
-  ;;   (define-key my-base-leader-map (kbd "c") 'compile))
-  ;; ...
+    ;; is the same as
+    ;; (unless (lookup-key my-base-leader-map (kbd "c"))
+    ;;   (define-key my-base-leader-map (kbd "c") 'compile))
+    ;; ...
 #+END_SRC
 
 The second function only adds the bindings if there is no existing binding for
@@ -80,3 +88,20 @@ that key. It is probably only useful for shared configurations, where you want
 to provide a default binding but don't want that binding to overwrite one made
 by the user. Note the keys in both functions are strings that are passed to
 =kbd= before binding them.
+
+** Avoiding repetition
+If you use multiple =bind-map= declarations you might find yourself repeating
+properties like =:evil-keys= and =:evil-states=. You may use
+=bind-map-for-mode-inherit= to automatically pull these properties from a parent
+map as the following example illustrates. See the docstring for more
+information.
+
+#+BEGIN_SRC emacs-lisp
+(bind-map my-leader-map
+  :keys ("M-m")
+  :evil-keys ("SPC")
+  :evil-states (normal motion visual))
+
+(bind-map-for-mode-inherit my-markdown-map my-leader-map
+  :major-modes (markdown-mode))
+#+END_SRC

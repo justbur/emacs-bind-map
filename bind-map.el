@@ -109,20 +109,24 @@
 
 (defcustom bind-map-default-keys nil
   "Default for :keys when unspecified."
-  :group 'bind-map)
+  :group 'bind-map
+  :type  '(repeat string))
 
 (defcustom bind-map-default-evil-states '(normal motion visual)
   "Default states for evil bindings."
-  :group 'bind-map)
+  :group 'bind-map
+  :type  '(repeat symbol))
 
 (defcustom bind-map-default-evil-keys nil
   "Default for :evil-keys when unspecified."
-  :group 'bind-map)
+  :group 'bind-map
+  :type  '(repeat string))
 
 (defcustom bind-map-default-map-suffix "-bm-map"
   "Default suffix to use for `bind-map-for-major-mode' and
 `bind-map-for-minor-mode'."
-  :group 'bind-map)
+  :group 'bind-map
+  :type  'string)
 
 (defvar bind-map-evil-local-bindings '()
   "Each element takes the form (OVERRIDE-MODE STATE KEY DEF) and

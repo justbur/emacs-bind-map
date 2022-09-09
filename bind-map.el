@@ -128,14 +128,13 @@
   :group 'bind-map
   :type  'string)
 
+(define-obsolete-variable-alias 'bind-map-local-bindings
+                                'bind-map-evil-local-bindings "2015-12-2")
 (defvar bind-map-evil-local-bindings '()
   "Each element takes the form (OVERRIDE-MODE STATE KEY DEF) and
 corresponds to a binding for an evil local state map.
 OVERRIDE-MODE is the minor mode that must be enabled for these to
 be activated.")
-(defvaralias 'bind-map-local-bindings 'bind-map-evil-local-bindings)
-(make-obsolete-variable 'bind-map-local-bindings
-                        'bind-map-evil-local-bindings "2015-12-2")
 
 (defun bind-map-put-map-properties (map-sym &rest properties)
   "Use put to add symbol properties to MAP-SYM."

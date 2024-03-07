@@ -128,6 +128,32 @@
   :group 'bind-map
   :type  'string)
 
+(defcustom bind-map-use-remapped-modes t
+  "If non-nil, bind-map will be aware of remapped modes. For
+example, suppose you used `bind-map' to define a keymap for
+`foo-mode', but use `major-mode-remap-alist' to remap `foo-mode'
+to `bar-mode'. If `bind-map-use-remapped-modes' is non-nil, then,
+when `bar-mode' is activated
+ (either directly or by activating `foo-mode'), the keymap for
+ `foo-mode' will be active. If you define separate keymaps for
+ `foo-mode' and `bar-mode' yet leave this option non-nil, chaos
+ may ensue."
+  :group 'bind-map
+  :type 'boolean)
+
+(defcustom bind-map-use-aliased-modes t
+  "If non-nil, bind-map will be aware of aliased modes. For example,
+suppose you used `bind-map' to define a keymap for `foo-mode',
+but `foo-mode' is actually an alias for `bar-mode'. If
+`bind-map-use-aliased-modes' is non-nil, then, when `bar-mode' is
+activated (either directly or by activating `foo-mode'), the
+keymap for `foo-mode' will be active. If you define separate
+keymaps for `foo-mode' and `bar-mode' yet leave this option
+non-nil, chaos may ensue."
+  :group 'bind-map
+  :type 'boolean)
+
+
 (defvar bind-map-evil-local-bindings '()
   "Each element takes the form (OVERRIDE-MODE STATE KEY DEF) and
 corresponds to a binding for an evil local state map.
@@ -173,10 +199,29 @@ when the major mode is an element of the cdr. See
   (dolist (entry bind-map-major-modes-alist)
     (if (boundp (car entry))
       (setf (symbol-value (car entry))
-            (not (null (member major-mode (cdr entry)))))
+            (not
+             (null
+              (member major-mode
+                      (mapcan
+                       #'bind-map--lookup-major-modes (cdr entry))))))
       (message "bind-map: %s is void in change major mode hook" (car entry)))))
 (add-hook 'change-major-mode-after-body-hook
           'bind-map-change-major-mode-after-body-hook)
+
+(defun bind-map--lookup-major-modes (mode)
+  "Return a list of implicated modes depending on the values of
+`bind-map-use-remapped-modes' and `bind-map-use-aliased-modes'.
+If both are nil, just return `mode'. If
+`bind-map-use-remapped-modes' is non-nil, also return mode to
+which it has been remapped in `major-mode-remap-alist' (if
+applicable). If `bind-map-use-aliased-modes' is non-nil, also
+return any modes for which `mode' is an alias (if applicable)."
+  (let ((r-mode
+         (or (and bind-map-use-remapped-modes
+                  (boundp 'major-mode-remap-alist)
+                  (alist-get mode major-mode-remap-alist))))
+        (a-modes (and bind-map-use-aliased-modes (function-alias-p mode))))
+    (delq nil (append (list mode r-mode) a-modes))))
 
 (defun bind-map-add-to-major-mode-list (activate-var major-mode-list)
   "Add (ACTIVATE-VAR . MAJOR-MODE-LIST) to

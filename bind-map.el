@@ -215,12 +215,16 @@ If both are nil, just return `mode'. If
 `bind-map-use-remapped-modes' is non-nil, also return mode to
 which it has been remapped in `major-mode-remap-alist' (if
 applicable). If `bind-map-use-aliased-modes' is non-nil, also
-return any modes for which `mode' is an alias (if applicable)."
+return any modes for which `mode' is an alias (if applicable).
+Note: finding aliased modes relies on `function-alias-p', which
+is only available on Emacs 29.1+."
   (let ((r-mode
          (or (and bind-map-use-remapped-modes
                   (boundp 'major-mode-remap-alist)
                   (alist-get mode major-mode-remap-alist))))
-        (a-modes (and bind-map-use-aliased-modes (function-alias-p mode))))
+        (a-modes (and bind-map-use-aliased-modes
+                      (fboundp 'function-alias-p)
+                      (function-alias-p mode))))
     (delq nil (append (list mode r-mode) a-modes))))
 
 (defun bind-map-add-to-major-mode-list (activate-var major-mode-list)

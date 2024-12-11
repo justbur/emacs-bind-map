@@ -211,21 +211,26 @@ when the major mode is an element of the cdr. See
 (defun bind-map--lookup-major-modes (mode)
   "Return a list of implicated modes depending on the values of
 `bind-map-use-remapped-modes' and `bind-map-use-aliased-modes'.
-If both are nil, just return `mode'. If
-`bind-map-use-remapped-modes' is non-nil, also return mode to
-which it has been remapped in `major-mode-remap-alist' (if
-applicable). If `bind-map-use-aliased-modes' is non-nil, also
+If both are nil, just return `mode'.
+If `bind-map-use-remapped-modes' is non-nil, also return mode
+to which it has been remapped in `major-mode-remap-alist'
+or `major-mode-remap-defaults' (if applicable).
+If `bind-map-use-aliased-modes' is non-nil, also
 return any modes for which `mode' is an alias (if applicable).
 Note: finding aliased modes relies on `function-alias-p', which
 is only available on Emacs 29.1+."
   (let ((r-mode
-         (or (and bind-map-use-remapped-modes
-                  (boundp 'major-mode-remap-alist)
-                  (alist-get mode major-mode-remap-alist))))
+         (when bind-map-use-remapped-modes
+           (cond ((fboundp 'major-mode-remap)
+                  ;; bound in Emacs 30
+                  (major-mode-remap mode))
+                 ((boundp 'major-mode-remap-alist)
+                  ;; bound in Emacs 29
+                  (alist-get mode major-mode-remap-alist)))))
         (a-modes (and bind-map-use-aliased-modes
                       (fboundp 'function-alias-p)
                       (function-alias-p mode))))
-    (delq nil (append (list mode r-mode) a-modes))))
+    (delete-dups (delq nil (append (list mode r-mode) a-modes)))))
 
 (defun bind-map-add-to-major-mode-list (activate-var major-mode-list)
   "Add (ACTIVATE-VAR . MAJOR-MODE-LIST) to

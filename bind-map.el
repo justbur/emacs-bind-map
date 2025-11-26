@@ -407,16 +407,18 @@ mode maps. Set up by bind-map.el." map))
            (add-hook ',(intern (format "%s-hook" override-mode))
                      #'evil-normalize-keymaps))
          ;; Defensive hook to ensure the mode is enabled in buffers that may
-         ;; have been created in unusual ways (e.g., programmatically via
-         ;; get-buffer-create). This catches cases where after-change-major-mode-hook
-         ;; might not fire or fires before the global mode is enabled.
-         (defun ,ensure-override-mode-func ()
+         ;; have been created in unusual ways (e.g., without ever calling a
+         ;; major mode function).  This catches cases where
+         ;; `after-change-major-mode-hook' might not fire or fires before the
+         ;; global mode is enabled.
+         (defun ,ensure-override-mode-func (frame)
            ,ensure-override-mode-doc
-           (when (and ,global-override-mode
-                      (not ,override-mode)
-                      (not (minibufferp)))
-             (,override-mode 1)))
-         (add-hook 'buffer-list-update-hook #',ensure-override-mode-func)))
+           (with-current-buffer (window-buffer (frame-selected-window frame))
+             (when (and ,global-override-mode
+                        (not ,override-mode)
+                        (not (minibufferp)))
+               (,override-mode 1))))
+         (add-hook 'window-state-change-functions #',ensure-override-mode-func)))
 
      (if (or minor-modes major-modes)
          ;; only bind keys in root-map
